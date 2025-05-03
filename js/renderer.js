@@ -1,574 +1,458 @@
 // --- Renderer Process Logic ---
 
 // --- Imports ---
-import { loadQuestions } from './examManager.js';
+import { loadQuestions } from "./examManager.js";
 import {
-    renderQuestionUI,
-    updateNavigationButtons,
-    showView,
-    enableControls,
-    disableControls,
-    setUiControllerReferences,
-    applySavedTheme, // Needed if theme logic affects renderer directly?
-    openReviewModal, // Needed for button listener
-    showHelp,        // Needed for button listener
-    openCalculator   // Needed for button listener
-} from './uiController.js';
-import { generateReport } from './reportGenerator.js'; // Import generateReport
+  renderQuestionUI,
+  updateNavigationButtons,
+  showView,
+  enableControls,
+  disableControls,
+  applySavedTheme, // Needed for initial load
+  openReviewModal,
+  openHelpModal,
+  openCalculatorModal,
+  showLabValues, // Correct function to call
+  toggleDarkMode,
+  setStrikethroughReference, // Pass the strikethrough state reference
+} from "./uiController.js";
+import { generateReport } from "./reportGenerator.js";
+import { startTimer, stopTimer, togglePause } from "./timer.js"; // Import timer controls
 
 // --- State Variables ---
 let questions = [];
-
-// --- State Variables ---
 let currentQuestionIndex = 0;
-let userAnswers = []; // Will be initialized after questions are loaded
-let markedQuestions = []; // Will be initialized after questions are loaded
-let crossedOutOptions = []; // Will be initialized after questions are loaded
-let userAnnotations = []; // Stores { questionIndex: { strikethroughs: ['A', 'B', ...] } }
+let userAnswers = []; // Stores selected option value ('A', 'B' or '0', '1', etc.)
+let markedQuestions = []; // Array of booleans
+let crossedOutOptions = {}; // Object: { questionIndex: Set(['A', 'C']) }
+let examFilename = null; // Store the loaded exam filename
 
 // --- DOM Elements ---
-const examContainer = document.querySelector('.app-container');
-const reportContainer = document.getElementById('report-container');
-const questionArea = document.getElementById('question-area');
-const restartButton = document.getElementById('restart-button');
+// Buttons that trigger actions managed here or passed to uiController
+const prevButton = document.getElementById("prev-button");
+const nextButton = document.getElementById("next-button");
+const markCheckbox = document.getElementById("mark-question");
+const labValuesButton = document.getElementById("lab-values-button");
+const calculatorButton = document.getElementById("calculator-button");
+const reviewButton = document.getElementById("review-button");
+const helpButton = document.getElementById("help-button");
+const darkModeToggle = document.getElementById("dark-mode-toggle"); // Button, not checkbox
+const pauseButton = document.getElementById("pause-button"); // Handled by timer.js
 
-// Help Modal elements moved to uiController.js
-// const helpModal = document.getElementById('help-modal');
+// Main containers/areas
+const reportContainer = document.getElementById("report-container");
+const reportContentElement = document.getElementById("report-content");
+const restartButton = document.getElementById("restart-button");
+const downloadPdfButton = document.getElementById("download-report-pdf");
 
 // --- Functions ---
 
-// --- Core Rendering & UI Update --- 
+function renderCurrentQuestion() {
+  console.log(`Renderer: Rendering question index ${currentQuestionIndex}`);
+  if (currentQuestionIndex < 0 || currentQuestionIndex >= questions.length) {
+    console.error(`Invalid question index: ${currentQuestionIndex}`);
+    return;
+  }
+  const question = questions[currentQuestionIndex];
+  const userAnswer = userAnswers[currentQuestionIndex];
+  const isMarked = markedQuestions[currentQuestionIndex];
 
-function renderQuestion(index) {
-    console.log(`Renderer: Rendering question index ${index}`);
-    if (index < 0 || index >= questions.length) {
-        console.error(`Invalid question index: ${index}`);
-        return;
-    }
-
-    const question = questions[index];
-    const userAnswer = userAnswers[index]; // Get user's answer for this question
-    const isMarked = markedQuestions[index]; // Get marked status
-
-    // Call the UI controller function to handle DOM updates
-    if (typeof renderQuestionUI === 'function') {
-         renderQuestionUI(question, index, questions.length, userAnswer, isMarked);
-    } else {
-         console.error("renderQuestionUI function not found in uiController.js!");
-         // Basic fallback (consider displaying error in UI)
-         const qTextDiv = document.getElementById('question-text'); 
-         if(qTextDiv) qTextDiv.textContent = "Error: UI rendering function unavailable.";
-    }
-    
-    // Call UI controller to update navigation buttons
-    if (typeof updateNavigationButtons === 'function') {
-        updateNavigationButtons(index, questions.length);
-    } else {
-        console.error("updateNavigationButtons function not found in uiController.js!");
-    }
+  // Call UI controller function to update the DOM
+  renderQuestionUI(
+    question,
+    currentQuestionIndex,
+    questions.length,
+    userAnswer,
+    isMarked
+  );
+  updateNavigationButtons(currentQuestionIndex, questions.length);
 }
 
-function nextQuestion() {
-    handleNavigationClick('next');
+function handleNavigatePrevious() {
+  if (currentQuestionIndex > 0) {
+    currentQuestionIndex--;
+    renderCurrentQuestion();
+  }
 }
 
-function previousQuestion() {
-    handleNavigationClick('prev');
+function handleNavigateNext() {
+  if (currentQuestionIndex < questions.length - 1) {
+    currentQuestionIndex++;
+    renderCurrentQuestion();
+  } else {
+    // Last question reached, button now says "Finish Exam"
+    endExam();
+  }
 }
 
-function handleMarkCheckboxChange() {
+function handleMarkQuestionChange() {
+  if (markCheckbox) {
+    // Check if element exists
     markedQuestions[currentQuestionIndex] = markCheckbox.checked;
-    // Optional: provide visual feedback elsewhere (e.g., in a review list)
+    console.log(
+      `Renderer: Question ${currentQuestionIndex} marked status: ${markCheckbox.checked}`
+    );
+  }
 }
 
-// Handles storing the user's selected answer
-function handleAnswerSelection(selectedValue) {
-    if (currentQuestionIndex >= 0 && currentQuestionIndex < userAnswers.length) {
-        console.log(`Storing answer for question ${currentQuestionIndex}: ${selectedValue}`);
-        userAnswers[currentQuestionIndex] = selectedValue;
-    } else {
-        console.error(`Invalid currentQuestionIndex (${currentQuestionIndex}) for storing answer.`);
+// --- Event Handlers for UI Controller Events ---
+
+function handleOptionSelected(event) {
+  const { questionIndex, selectedValue } = event.detail;
+  if (questionIndex >= 0 && questionIndex < userAnswers.length) {
+    console.log(
+      `Renderer: Storing answer for question ${questionIndex}: ${selectedValue}`
+    );
+    userAnswers[questionIndex] = selectedValue;
+  } else {
+    console.error(
+      `Renderer: Invalid questionIndex (${questionIndex}) for storing answer.`
+    );
+  }
+}
+
+function handleOptionStrikethroughToggled(event) {
+  const { questionIndex, optionLetter } = event.detail;
+  if (questionIndex >= 0 && questionIndex < questions.length) {
+    if (!crossedOutOptions[questionIndex]) {
+      crossedOutOptions[questionIndex] = new Set();
     }
-}
-
-function handleOptionClick(event) {
-    const clickedOption = event.currentTarget;
-    const questionIndex = parseInt(clickedOption.dataset.questionIndex);
-    const optionLetter = clickedOption.dataset.option;
-
-    // If this option is already crossed out, do nothing on click
     if (crossedOutOptions[questionIndex].has(optionLetter)) {
-        return;
-    }
-
-    // Deselect previous selection for this question
-    questionArea.querySelectorAll('.option').forEach(opt => {
-        // Only deselect options for the current question
-        if (parseInt(opt.dataset.questionIndex) === questionIndex) {
-            opt.classList.remove('selected');
-            opt.querySelector('input[type="radio"]').checked = false;
-        }
-    });
-
-    // Select the clicked option
-    clickedOption.classList.add('selected');
-    clickedOption.querySelector('input[type="radio"]').checked = true;
-    userAnswers[questionIndex] = optionLetter;
-}
-
-function handleOptionRightClick(event) {
-    event.preventDefault(); // Prevent default context menu
-
-    const clickedOption = event.currentTarget;
-    const questionIndex = parseInt(clickedOption.dataset.questionIndex);
-    const optionLetter = clickedOption.dataset.option;
-
-    const isCurrentlySelected = clickedOption.classList.contains('selected');
-
-    // If the option is currently selected, deselect it before crossing out
-    if (isCurrentlySelected) {
-        clickedOption.classList.remove('selected');
-        clickedOption.querySelector('input[type="radio"]').checked = false;
-        userAnswers[questionIndex] = null; // Clear the user's selection
-    }
-
-    // Toggle the crossed-out state
-    clickedOption.classList.toggle('crossed-out');
-
-    if (clickedOption.classList.contains('crossed-out')) {
-        crossedOutOptions[questionIndex].add(optionLetter);
+      crossedOutOptions[questionIndex].delete(optionLetter);
+      console.log(
+        `Renderer: Removed strikethrough for Q${questionIndex}, Option ${optionLetter}`
+      );
     } else {
-        crossedOutOptions[questionIndex].delete(optionLetter);
+      crossedOutOptions[questionIndex].add(optionLetter);
+      console.log(
+        `Renderer: Added strikethrough for Q${questionIndex}, Option ${optionLetter}`
+      );
+      // Also clear the answer if the struck-out option was selected
+      if (
+        userAnswers[questionIndex] === optionLetter ||
+        String(userAnswers[questionIndex]) === optionLetter
+      ) {
+        userAnswers[questionIndex] = null;
+        console.log(
+          `Renderer: Cleared answer for Q${questionIndex} because selected option was struck out.`
+        );
+        // Re-render to show selection removed (optional, uiController handles immediate UI)
+        // renderCurrentQuestion();
+      }
     }
+  } else {
+    console.error(
+      `Renderer: Invalid questionIndex (${questionIndex}) for strikethrough toggle.`
+    );
+  }
 }
 
-function handleNavigationClick(direction) {
-    if (direction === 'next') {
-        if (currentQuestionIndex < questions.length - 1) {
-            currentQuestionIndex++;
-        } else {
-             // End of test, show report
-            endExam();
-            return; // Don't render next question
-        }
-    } else if (direction === 'prev') {
-        if (currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-        }
-    }
-    renderQuestion(currentQuestionIndex);
-     // Scroll to the top of the question area on navigation
-    questionArea.scrollTo(0, 0);
+function handleNavigateToQuestion(event) {
+  const { questionIndex } = event.detail;
+  if (questionIndex >= 0 && questionIndex < questions.length) {
+    console.log(
+      `Renderer: Navigating to question ${questionIndex} from review.`
+    );
+    currentQuestionIndex = questionIndex;
+    renderCurrentQuestion();
+  } else {
+    console.error(
+      `Renderer: Invalid question index (${questionIndex}) requested for navigation.`
+    );
+  }
 }
 
-function handleHighlightSelection(event) { // Changed from no arg to event
-    console.log("handleHighlightSelection called"); // <-- Add Entry Log
-    // Use event.currentTarget which IS the .question-text element the listener was attached to
-    const questionTextElement = event.currentTarget;
+// --- Exam Lifecycle Functions ---
 
-    // The check below is no longer strictly needed as the listener IS on the element,
-    // but we keep it as a safeguard in case the event bubbles unexpectedly.
-     if (!event.target.closest('.question-text')) { // Check if the actual click target is inside
-         console.log("Highlight aborted: Target not within .question-text"); // <-- Add Log
-         return; // Exit if the click wasn't truly inside the text area
-     }
+export function endExam() {
+  console.log("Renderer: Ending exam...");
+  stopTimer(); // Stop the timer
+  disableControls(); // Disable footer buttons etc.
 
+  // Calculate score
+  let correctCount = 0;
+  questions.forEach((q, index) => {
+    // Handle both object ('A') and array (0) based answers - Assuming OBJECT format now
+    let isCorrect = false;
+    const userAnswer = userAnswers[index];
+    const correctAnswerKey = q.correctAnswer; // USE CORRECT FIELD NAME
+    const options = q.options;
 
-    const selection = window.getSelection();
-    // Exit if no selection or selection is empty (collapsed)
-    if (!selection.rangeCount || selection.isCollapsed) { 
-        console.log("Highlight aborted: No selection range or selection collapsed"); // <-- Add Log
-        return; 
-    }
-
-    const range = selection.getRangeAt(0);
-
-     // Prevent highlighting if selection is zero width (e.g., just a click)
-    if (range.getBoundingClientRect().width === 0) {
-        console.log("Highlight aborted: Zero-width selection"); // <-- Add Log
-        selection.removeAllRanges(); // Clear the collapsed selection
-        return;
-    } 
-    
-    // *** Add null check for the common ancestor container ***
-    if (!range.commonAncestorContainer) { 
-        console.warn("Highlight aborted: Selection common ancestor is null."); // <-- Modified Log
-        selection.removeAllRanges(); 
-        return;
-    }
-
-    // *** Add check if it's a valid Node ***
-    if (!(range.commonAncestorContainer instanceof Node)) {
-         console.warn("Highlight aborted: Selection common ancestor is not a valid Node:", range.commonAncestorContainer); // <-- Modified Log
-         selection.removeAllRanges();
-         return;
-    }
-
-    // Check if the valid common ancestor Node is within the target element (event.currentTarget)
-    let isContained = false;
-    try {
-        // --- Wrap this check in try...catch ---
-        isContained = questionTextElement.contains(range.commonAncestorContainer);
-    } catch (error) {
-        console.error("Error during .contains() check:", error); // Keep error logs
-        console.error("questionTextElement:", questionTextElement);
-        console.error("commonAncestorContainer:", range.commonAncestorContainer);
-        selection.removeAllRanges(); // Attempt to clear selection on error
-        console.log("Highlight aborted: Error during contains() check."); // <-- Add Log
-        return; // Exit if check fails
-    }
-
-    if (!isContained) {
-        console.log("Highlight aborted: Selection not contained within question text."); // <-- Add Log
-         selection.removeAllRanges(); // Clear selection if outside target area
-        return;
-    }
-    
-    // If all checks pass, apply the highlight
-    console.log("Applying highlight..."); // <-- Add Log
-    applyHighlight(range);
-     // Selection is cleared within applyHighlight AFTER insertion
-}
-
-function applyHighlight(range) {
-    // Create a span to wrap the selection
-    const highlightSpan = document.createElement('span');
-    highlightSpan.className = 'highlighted-text';
-    
-    // Add click listener to the span itself for removal
-    highlightSpan.addEventListener('click', () => {
-         removeHighlight(highlightSpan);
-    });
-
-    try {
-        // This might throw an error if the selection spans across
-        // elements that cannot contain a span, or crosses boundaries
-        // in complex ways. A more robust solution might involve iterating
-        // through nodes in the range.
-        range.surroundContents(highlightSpan);
-        window.getSelection().removeAllRanges(); // Clear selection after highlighting
-    } catch (e) {
-        console.error("Highlighting error: ", e);
-        // Optional: Provide feedback if highlighting fails
-        // alert("Could not highlight the selection. It might span across incompatible elements.");
-        // Attempt to clear selection even on error
-        window.getSelection().removeAllRanges();
-    }
-}
-
-function removeHighlight(spanElement) {
-     const parent = spanElement.parentNode;
-     if (!parent) return;
-
-     // Move all child nodes of the span out before the span
-     while (spanElement.firstChild) {
-          parent.insertBefore(spanElement.firstChild, spanElement);
-     }
-     // Remove the now-empty span
-     parent.removeChild(spanElement);
-     parent.normalize(); // Merges adjacent text nodes (optional but good practice)
-}
-
-// --- Exam Flow Control ---
-function endExam() {
-    console.log("Ending exam...");
-    stopTimer(); 
-    const scoreData = calculateScore(); // Calculate and get score data
-
-    // Use UI Controller to handle view switching
-    if (typeof showReportArea === 'function') {
-        showReportArea();
+    if (options && typeof options === "object" && !Array.isArray(options)) {
+      // Object format: q.correctAnswer is 'A', userAnswer is 'A'
+      const isValidUserAnswer =
+        userAnswer !== null && options.hasOwnProperty(userAnswer);
+      const isValidCorrectAnswer =
+        correctAnswerKey !== null && options.hasOwnProperty(correctAnswerKey);
+      isCorrect =
+        isValidUserAnswer &&
+        isValidCorrectAnswer &&
+        userAnswer === correctAnswerKey;
     } else {
-        console.error("showReportArea function not found in uiController.js");
-        // Fallback or error handling if function doesn't exist
-        if (examContainer) examContainer.classList.add('hidden'); 
-        if (reportContainer) reportContainer.classList.remove('hidden'); 
+      console.warn(
+        `Cannot determine correctness for question ${index} due to missing/invalid options object.`
+      );
     }
-
-    // Get the report element locally
-    const reportContentDiv = document.getElementById('report-content'); 
-    if (reportContentDiv && typeof generateReport === 'function') {
-        generateReport(reportContentDiv, questions, userAnswers, scoreData); // Call from reportGenerator.js
-    } else if (!reportContentDiv){
-        console.error("Report content div not found!");
-    } else {
-        console.error("generateReport function not found in reportGenerator.js!");
+    if (isCorrect) {
+      correctCount++;
     }
+  });
+  const scoreData = { correctCount, totalQuestions: questions.length };
 
-    // Disable navigation buttons, etc. (Handled by showReportArea now)
-    // disableControls(); 
+  console.log(
+    `Renderer: Exam finished. Score: ${scoreData.correctCount}/${scoreData.totalQuestions}`
+  );
+
+  // Generate and display the report
+  if (reportContentElement) {
+    generateReport(reportContentElement, questions, userAnswers, scoreData);
+    showView("report"); // Switch UI to the report view
+  } else {
+    console.error("Cannot display report: report content element not found.");
+    // Maybe show an alert as a fallback
+    alert(
+      `Exam Finished! Score: ${scoreData.correctCount} / ${scoreData.totalQuestions}`
+    );
+    showView("welcome"); // Go back to welcome screen if report can't be shown
+  }
 }
 
-// Resets the exam state and starts over
 function restartExam() {
-    console.log("Restarting exam...");
-    // Reset state variables
+  console.log("Renderer: Restarting exam...");
+  // Stop any running timer (important)
+  stopTimer();
+  // Reset state variables
+  questions = [];
+  currentQuestionIndex = 0;
+  userAnswers = [];
+  markedQuestions = [];
+  crossedOutOptions = {};
+  examFilename = null; // Clear filename
+
+  // Show the welcome screen again
+  showView("welcome");
+
+  // Re-populate the exam list on the welcome screen
+  // Assuming welcomeScreen.js has a function for this, we might need to call it
+  // For now, the user will manually select again.
+  // If welcomeScreen.js uses DOMContentLoaded, a full reload might be simpler,
+  // but let's try just showing the view.
+  // We might need to explicitly call populateExamList from welcomeScreen.js if it's exported.
+  // Or, the welcomeScreen.js could re-populate when its view becomes visible.
+}
+
+async function downloadReportAsPDF() {
+  console.log("Renderer: Preparing PDF download...");
+  const reportContent = document.getElementById("report-content");
+  const reportButtons = document.querySelector(".report-buttons"); // Buttons container
+  if (!reportContent) {
+    console.error("Cannot download PDF: Report content element not found.");
+    alert("Error: Could not find report content to download.");
+    return;
+  }
+  if (!window.html2canvas || !window.jspdf) {
+    console.error(
+      "Cannot download PDF: html2canvas or jspdf library not found."
+    );
+    alert("Error: PDF generation library not loaded.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf; // Destructure jsPDF from the global object
+
+  // Temporarily hide buttons during capture
+  if (reportButtons) reportButtons.style.display = "none";
+
+  try {
+    const canvas = await html2canvas(reportContent, {
+      scale: 2, // Increase scale for better quality
+      useCORS: true, // If report includes external images (unlikely here)
+      logging: true, // Enable logging for debugging
+    });
+
+    // Restore buttons visibility after capture
+    if (reportButtons) reportButtons.style.display = "block";
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "p", // portrait
+      unit: "mm", // millimeters
+      format: "a4", // A4 size
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgWidth = pdfWidth - 20; // pdf width with some margin
+    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+    let heightLeft = imgHeight;
+    let position = 10; // Initial top margin
+
+    // Add first page
+    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight - 20; // Subtract first page height (with margin)
+
+    // Add subsequent pages if needed
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight + 10; // Adjust position for next page
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20;
+    }
+
+    // Generate a filename based on the exam
+    const safeFilename =
+      (examFilename || "exam_report").replace(/[^a-z0-9_-]/gi, "_") + ".pdf";
+    pdf.save(safeFilename);
+    console.log(`Renderer: PDF download initiated as ${safeFilename}`);
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    alert("An error occurred while generating the PDF report.");
+    // Restore buttons visibility in case of error
+    if (reportButtons) reportButtons.style.display = "block";
+  }
+}
+
+// --- Initialization and Event Listeners ---
+
+// Function called by welcomeScreen.js when 'Start Exam' is clicked
+export async function initializeExam(selectedFilename) {
+  console.log(`Renderer: Initializing exam with file: ${selectedFilename}`);
+  examFilename = selectedFilename; // Store filename
+
+  // Show loading state? (Optional, handled by uiController?)
+  // showLoadingState("Loading exam...");
+
+  try {
+    questions = await loadQuestions(selectedFilename);
+    if (questions.length === 0) {
+      throw new Error("Exam file loaded, but it contains no questions.");
+    }
+    console.log(`Renderer: Successfully loaded ${questions.length} questions.`);
+
+    // Initialize state arrays based on loaded questions
     currentQuestionIndex = 0;
     userAnswers = new Array(questions.length).fill(null);
     markedQuestions = new Array(questions.length).fill(false);
-    crossedOutOptions = questions.map(() => new Set());
-    userAnnotations = questions.map(() => ({ strikethroughs: [], notes: '' })); // Adjusted structure slightly
-
-    // *** Call setUiControllerReferences again after reset ***
-    if (typeof setUiControllerReferences === 'function') {
-        setUiControllerReferences(questions, userAnswers, markedQuestions);
-    } else {
-        // console.warn("setUiControllerReferences function not found in uiController.js yet");
-    }
-
-    // Reset UI elements managed by renderer
-    // renderQuestion(currentQuestionIndex); // Moved to after enableControls call
-    // Render first question
-    renderQuestion(currentQuestionIndex);
-
-    // Use UI Controller to switch back to the exam view
-    if (typeof showExamArea === 'function') {
-        showExamArea();
-    } else {
-        console.error("showExamArea function not found in uiController.js");
-        // Fallback or error handling
-        if (reportContainer) reportContainer.classList.add('hidden');
-        if (examContainer) examContainer.classList.remove('hidden');
-    }
-
-    // Restart timer and render first question (keep this logic here)
-    setupExamControlListeners(); // Re-enable controls
-    // Enable controls (Handled by showExamArea now)
-    // enableControls(); 
-}
-
-// --- Initialization and Listeners --- 
-
-// Placeholder for loading state logic
-function showLoadingState(message) {
-    console.log(`Loading: ${message}`);
-    // TODO: Implement UI changes for loading (e.g., show spinner)
-}
-
-function hideLoadingState() {
-    console.log("Loading complete.");
-    // TODO: Hide spinner
-}
-
-// --- Initialization --- 
-export async function initializeExam(examFilename = 'Neuro-E-5.json') {
-    console.log(`Renderer: Initializing exam with ${examFilename}...`);
-    showLoadingState(`Loading ${examFilename}...`);
-    if (typeof disableControls === 'function') {
-        disableControls(); // Disable controls during load
-    } else {
-        console.error("Global disableControls function not found!");
-    }
-
-    try {
-        // Load questions using ExamManager
-        questions = await loadQuestions(examFilename);
-
-        // Initialize state based on loaded questions
-        currentQuestionIndex = 0;
-        userAnswers = new Array(questions.length).fill(null);
-        markedQuestions = new Array(questions.length).fill(false);
-        crossedOutOptions = questions.map(() => new Set());
-        userAnnotations = questions.map(() => ({ highlights: [], notes: '' })); // Adjusted structure slightly
-
-        // --- Start Timer ---
-        const totalDurationSeconds = questions.length * 90; // 90 seconds per question
-        if (typeof startTimer === 'function') {
-            console.log(`Renderer: Starting timer with duration: ${totalDurationSeconds} seconds.`);
-            startTimer(totalDurationSeconds);
-        } else {
-            console.error("startTimer function not found in timer.js! Cannot start timer.");
-        }
-
-        // Initial UI setup
-        renderQuestion(currentQuestionIndex); 
-        if (typeof enableControls === 'function') {
-             enableControls(); // Enable controls only after questions are loaded
-        } else {
-             console.error("Global enableControls function not found!");
-        }
-        // Setup listeners that might depend on exam content being present
-        setupExamControlListeners(); 
-        setupReviewModalListeners(); 
-
-    } catch (error) {
-        console.error("Initialization failed:", error);
-        // Display a user-friendly error message in the exam area
-        const examAreaDiv = document.getElementById('exam-area'); 
-        if(examAreaDiv) examAreaDiv.innerHTML = `<p style="color: red; padding: 20px;">Error initializing exam: ${error.message}. Please check the console or try selecting a different exam.</p>`;
-        
-        // Optionally disable controls via UI controller on error
-        if (typeof disableControls === 'function') {
-             disableControls(); 
-        } else {
-            console.error("Global disableControls function not found!");
-        }
-        // Ensure essential controls like dark mode toggle remain functional if needed
-    }
-
-    // Re-enable controls after setup
-    if (typeof enableControls === 'function') {
-        enableControls();
-    } else {
-        console.error("Global enableControls function not found!");
-    }
-
-    hideLoadingState();
-    console.log("Initialization complete.");
-}
-
-function setupExamControlListeners() {
-    console.log("Setting up exam control listeners...");
-    // Get button references (ensure they exist after start)
-    const labValuesButton = document.getElementById('lab-values-button');
-    const calculatorButton = document.getElementById('calculator-button');
-    const reviewButton = document.getElementById('review-button'); // Added review button reference
-    const pauseButton = document.getElementById('pause-button'); // Added pause button reference
-    const helpButton = document.getElementById('help-button');
-    const restartButton = document.getElementById('restart-button'); // Assuming restart button exists on report
-    const nextButton = document.getElementById('next-button');
-    const prevButton = document.getElementById('prev-button');
-
-    // Question Header Controls
-    const markCheckbox = document.getElementById('mark-question');
-    if (markCheckbox) {
-        markCheckbox.addEventListener('change', handleMarkCheckboxChange);
-    } else {
-        console.error("Mark question checkbox not found!");
-    }
-
-    const optionsList = document.getElementById('options-list'); // Get options list container
-    if (optionsList) {
-        optionsList.addEventListener('change', (event) => {
-            // Check if the event target is a radio button within the list
-            if (event.target.type === 'radio' && event.target.name === 'option') {
-                const selectedValue = event.target.value;
-                handleAnswerSelection(selectedValue); // Call handler from renderer.js
-            }
-        });
-    } else {
-        console.error("Options list container (#options-list) not found!");
-    }
-
-    // Navigation listeners
-    if (nextButton) {
-        nextButton.addEventListener('click', nextQuestion); // Assuming nextQuestion handles submit logic
-    } else {
-        console.error("Next button not found!");
-    }
-    if (prevButton) {
-        prevButton.addEventListener('click', previousQuestion);
-    } else {
-        console.error("Previous button not found!");
-    }
-
-    // Utility button listeners
-    if (labValuesButton) {
-        labValuesButton.addEventListener('click', () => {
-            // Call the function now defined in labValues.js (assuming global scope)
-            if (typeof openLabValuesPanel === 'function') { 
-                openLabValuesPanel();
-            } else {
-                console.error("openLabValuesPanel function not found! Ensure labValues.js is loaded.");
-            }
-        });
-    } else {
-        console.error("Lab values button not found!");
-    }
-    // Calculator button listener
-    if (calculatorButton) {
-        calculatorButton.addEventListener('click', () => {
-            // Call the function now defined in uiController
-            if (typeof openCalculator === 'function') {
-                 openCalculator();
-             } else {
-                console.error("openCalculator function not found in uiController.js");
-            }
-        });
-    } else {
-         console.error("Calculator button not found!");
-    }
-    // Help button listener
-    if (helpButton) {
-        helpButton.addEventListener('click', () => {
-            // Call the function now defined in uiController
-            if (typeof showHelp === 'function') {
-                showHelp();
-            } else {
-                 console.error("showHelp function not found in uiController.js");
-             }
-        });
-    } else {
-        console.error("Help button not found!");
-    }
-    // Review button listener
-    if (reviewButton) {
-        reviewButton.addEventListener('click', () => {
-             if (typeof openReviewModal === 'function') {
-                 openReviewModal(); // Call function from uiController
-             } else {
-                 console.error("openReviewModal function not found in uiController.js");
-             }
-         });
-    } else {
-        console.error("Review button not found!");
-    }
-    // Pause button listener
-    if (pauseButton) {
-         pauseButton.addEventListener('click', () => {
-             if (typeof togglePause === 'function') {
-                 togglePause(); // Call function from timer.js
-             } else {
-                 console.error("togglePause function not found in timer.js");
-             }
-         });
-    } else {
-        console.error("Pause button not found!");
-    }
-    // Restart button listener
-    if (restartButton) restartButton.addEventListener('click', restartExam);
-     console.log("Exam control listeners attached.");
-}
-
-function setupReviewModalListeners() {
-    // Listeners for controls *inside* the modal (close, filters, list clicks) 
-    // are now handled within uiController.js (specifically in openReviewModal/closeReviewModal)
-    // We only need to ensure the main 'Review Exam' button listener is attached (done in setupExamControlListeners)
-    console.log("Review modal listeners setup (now handled by uiController.js when opened).");
-}
-
-// --- Event Listener for Navigation from Review Modal ---
-document.addEventListener('navigateToQuestion', (event) => {
-    if (event.detail && typeof event.detail.questionIndex === 'number') {
-        const index = event.detail.questionIndex;
-        console.log(`Renderer: Received navigateToQuestion event for index ${index}`);
-        if (index >= 0 && index < questions.length) {
-            currentQuestionIndex = index;
-            renderQuestion(currentQuestionIndex);
-            questionArea.scrollTo(0, 0); // Scroll to top
-        } else {
-            console.error(`Renderer: Invalid index received from navigateToQuestion event: ${index}`);
-        }
-    } else {
-        console.error("Renderer: Invalid navigateToQuestion event received", event);
-    }
-});
-
-// --- Event Listener for Start Request --- 
-document.addEventListener('startExamRequested', (event) => {
-    const examFile = event.detail.examFile;
-    console.log("Received startExamRequested event for:", examFile);
-    initializeExam(examFile).catch(error => {
-        console.error("Error during exam initialization:", error);
-        // Optionally show an error message to the user in the UI
-        if (questionArea) {
-            questionArea.innerHTML = `<p style="color: red; padding: 20px;">Failed to initialize exam. Please check the console and ensure the exam file is valid.</p>`;
-        }
-        hideLoadingState(); // Ensure loading state is hidden on error
+    crossedOutOptions = {}; // Reset strikethroughs
+    questions.forEach((_, index) => {
+      crossedOutOptions[index] = new Set(); // Initialize empty sets
     });
+
+    // Pass the reference to the state variable to uiController
+    setStrikethroughReference(crossedOutOptions);
+
+    // Render the first question
+    renderCurrentQuestion();
+
+    // Enable UI controls (buttons, etc.)
+    enableControls();
+
+    // Start the timer (using default or potentially from exam data)
+    // Example: const examDuration = questions[0]?.examDuration || 150 * 90; // Get from data or use default
+    const examDuration = 150 * 90; // Stick to default for now
+    startTimer(examDuration);
+
+    // Show the main exam view (already done by welcomeScreen? Redundant?)
+    // Remove this redundant call
+    // showView("exam"); // Ensure exam view is shown
+
+    // hideLoadingState(); // Hide loading indicator
+  } catch (error) {
+    console.error("Renderer: Failed to initialize exam:", error);
+    // Display error to user (e.g., in the welcome screen's message area or an alert)
+    // hideLoadingState();
+    showView("welcome"); // Go back to welcome screen on error
+    const loadingMessage = document.getElementById("loading-message");
+    if (loadingMessage) {
+      loadingMessage.textContent = `Error starting exam: ${error.message}`;
+    } else {
+      alert(`Error starting exam: ${error.message}`);
+    }
+  }
+}
+
+// Setup listeners for main exam controls and global events
+function setupExamControlListeners() {
+  console.log("Renderer: Setting up exam control listeners...");
+
+  // Navigation
+  if (prevButton) prevButton.addEventListener("click", handleNavigatePrevious);
+  if (nextButton) nextButton.addEventListener("click", handleNavigateNext);
+
+  // Question actions
+  if (markCheckbox)
+    markCheckbox.addEventListener("change", handleMarkQuestionChange);
+
+  // Utility Buttons
+  if (labValuesButton) labValuesButton.addEventListener("click", showLabValues); // Use imported UI function
+  if (calculatorButton)
+    calculatorButton.addEventListener("click", openCalculatorModal);
+  if (reviewButton) {
+    // Ensure state arrays are passed here
+    reviewButton.addEventListener("click", () =>
+      openReviewModal(questions, userAnswers, markedQuestions)
+    );
+  }
+  if (helpButton) helpButton.addEventListener("click", openHelpModal);
+  if (darkModeToggle) darkModeToggle.addEventListener("click", toggleDarkMode);
+  // Pause button listener is set up within timer.js
+
+  // Report Screen Buttons
+  if (restartButton) restartButton.addEventListener("click", restartExam);
+  if (downloadPdfButton)
+    downloadPdfButton.addEventListener("click", downloadReportAsPDF);
+
+  // Listen for custom events from UI Controller
+  document.removeEventListener("optionSelected", handleOptionSelected);
+  document.addEventListener("optionSelected", handleOptionSelected);
+
+  document.removeEventListener(
+    "optionStrikethroughToggled",
+    handleOptionStrikethroughToggled
+  );
+  document.addEventListener(
+    "optionStrikethroughToggled",
+    handleOptionStrikethroughToggled
+  );
+
+  // Listen for timer end event
+  document.removeEventListener("timerEnd", endExam); // Remove previous if any
+  document.addEventListener("timerEnd", endExam);
+
+  console.log("Renderer: Exam control listeners attached.");
+  // Note: It might be beneficial to have a teardown function to remove these listeners
+  // when the exam ends or restarts, especially the document listeners.
+}
+
+// --- Initial Page Load Setup ---
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Renderer: DOM fully loaded and parsed");
+
+  // Apply saved theme preference on load
+  applySavedTheme();
+
+  // Setup listeners that depend on the DOM being ready
+  setupExamControlListeners();
+
+  // Setup listeners for events dispatched from uiController
+  document.addEventListener("optionSelected", handleOptionSelected);
+  document.addEventListener(
+    "optionStrikethroughToggled",
+    handleOptionStrikethroughToggled
+  );
+  document.addEventListener("navigateToQuestion", handleNavigateToQuestion);
+
+  // Setup listener for the timer ending
+  document.addEventListener("timerEnd", () => {
+    console.log("Renderer: Received timerEnd event. Calling endExam.");
+    endExam();
+  });
+
+  // Initialize Welcome Screen (or other initial setup)
+  // Assuming welcomeScreen.js handles its own initialization
+  showView("welcome"); // Start by showing the welcome screen
 });
 
-// Initial UI setup (e.g., show welcome screen) is handled by uiController.showView('welcome')
-// which should be called when the application first loads.
-// Ensure uiController's init function or equivalent is called.
-console.log("Renderer script loaded.");
+console.log("renderer.js loaded");

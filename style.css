@@ -1,0 +1,23 @@
+/* Rule for highlighting (using original class name) */
+.highlighted-text {
+  background-color: yellow;
+  color: black; /* Ensure text is readable */
+  cursor: pointer; /* Indicate it's clickable */
+}
+
+/* Strikethrough rule targeting the label */
+/* ... existing code ... */
+
+/* Dark mode Strikethrough rule targeting the label */
+body.dark-mode .option.crossed-out label {
+  text-decoration: line-through;
+  color: #666;
+}
+
+/* Dark mode Highlighting style (using original class name) */
+body.dark-mode .highlighted-text {
+  background-color: #777; /* Muted gray for dark mode highlight (from original) */
+  color: #f0f0f0; /* Ensure text is readable (from original) */
+}
+
+/* ... existing code ... */

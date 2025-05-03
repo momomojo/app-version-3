@@ -1,686 +1,988 @@
 // --- UI Controller ---
 // Manages UI elements like buttons, modals, dark mode, etc.
+import { openLabValuesPanel } from "./labValues.js"; // Import function to open lab panel
 
 // --- DOM Elements ---
-const prevButton = document.getElementById('prev-button');
-const nextButton = document.getElementById('next-button');
-const markCheckbox = document.getElementById('mark-question');
-const reviewModal = document.getElementById('review-modal');
-const reviewList = document.getElementById('review-list');
-const filterRadios = document.querySelectorAll('input[name="review-filter"]');
-const closeReviewButton = document.getElementById('close-review-modal');
-const mainWrapper = document.querySelector('.main-wrapper'); // For lab panel toggle
-const bodyElement = document.body; // Reference to body for dark mode and modal classes
-const darkModeToggle = document.getElementById('dark-mode-toggle');
-const helpModal = document.getElementById('help-modal');
-const closeHelpButton = document.getElementById('close-help-modal');
-const calculatorModal = document.getElementById('calculator-modal');
-const calculatorDisplay = document.getElementById('calculator-display');
-const calculatorButtons = document.getElementById('calculator-buttons');
-const closeCalculatorButton = document.getElementById('close-calculator-modal');
-// Main Layout Elements
-const welcomeScreenDiv = document.getElementById('welcome-screen');
-const appContainerDiv = document.getElementById('app-container');
-const headerElement = document.querySelector('header');
-const footerElement = document.querySelector('footer'); 
-// mainWrapper is already defined
-const examArea = document.getElementById('question-area'); // Main question display area
-const reportArea = document.getElementById('report-container'); // Final report display area
+const prevButton = document.getElementById("prev-button");
+const nextButton = document.getElementById("next-button");
+const markCheckbox = document.getElementById("mark-question");
+// Review Modal
+const reviewModal = document.getElementById("review-modal");
+const reviewList = document.getElementById("review-list");
+const filterRadios = document.querySelectorAll('input[name="review-filter"]'); // Corrected selector
+const closeReviewButton = document.getElementById("close-review-modal");
+// Help Modal
+const helpModal = document.getElementById("help-modal");
+const closeHelpButton = document.getElementById("close-help-modal");
+// Calculator Modal
+const calculatorModal = document.getElementById("calculator-modal");
+const closeCalculatorButton = document.getElementById("close-calculator-modal");
+const calculatorDisplay = document.getElementById("calculator-display");
+const calculatorButtons = document.getElementById("calculator-buttons"); // Grid container
+// Lab Panel
+const labValuesPanel = document.getElementById("lab-values-panel");
+const closeLabPanelButton = document.getElementById("close-lab-panel"); // Already handled in labValues.js
+// Main Layout & Shared
+const mainWrapper = document.querySelector(".main-wrapper");
+const bodyElement = document.body;
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+const welcomeScreenDiv = document.getElementById("welcome-screen");
+const appContainerDiv = document.getElementById("app-container");
+const headerElement = document.querySelector("header");
+const footerElement = document.querySelector("footer");
+const examArea = document.getElementById("question-area");
+const reportArea = document.getElementById("report-container");
 // Question Rendering Elements
-const questionNumberSpan = document.getElementById('question-number');
-const totalQuestionsSpan = document.getElementById('total-questions');
-const examSectionItemSpan = document.getElementById('exam-section-item'); 
-const questionTextDiv = document.getElementById('question-text');
-const optionsList = document.getElementById('options-list');
-const feedbackDiv = document.getElementById('feedback');
-const explanationDiv = document.getElementById('explanation');
-const highlightedElements = document.querySelectorAll('.highlight'); // For clearing text highlights
+const examSectionItemSpan = document.getElementById("exam-section-item");
+const questionTextDiv = document.getElementById("question-text");
+const optionsList = document.getElementById("options-list");
+const feedbackDiv = document.getElementById("feedback");
+const explanationDiv = document.getElementById("explanation");
 
-// Keep references to elements potentially needed by other modules (or pass them)
-// Example: elements needed for populateReviewList if called from elsewhere
-let questionsRef = []; // Reference to the questions array from renderer/examManager
-let userAnswersRef = []; // Reference to userAnswers array
-let markedQuestionsRef = []; // Reference to markedQuestions array
+// Remove references to state variables managed elsewhere
+// let questionsRef = [];
+// let userAnswersRef = [];
+// let markedQuestionsRef = [];
 
-// Function to set references from the module that holds the state (e.g., examManager)
-export function setUiControllerReferences(questions, userAnswers, markedQuestions) {
-    console.log("UI Controller: Setting state references...");
-    questionsRef = questions;
-    userAnswersRef = userAnswers;
-    markedQuestionsRef = markedQuestions;
-}
+// Function to set references from the module that holds the state (e.g., renderer.js)
+// export function setUiControllerReferences(
+//   questions,
+//   userAnswers,
+//   markedQuestions
+// ) {
+//   console.log("UI Controller: Setting state references...");
+//   questionsRef = questions;
+//   userAnswersRef = userAnswers;
+//   markedQuestionsRef = markedQuestions;
+// }
 
 // --- UI Controls Enable/Disable ---
 export function enableControls() {
-    console.log("UI Controller: Enabling controls...");
-    if (prevButton) prevButton.disabled = false;
-    if (nextButton) nextButton.disabled = false;
-    if (markCheckbox) markCheckbox.disabled = false;
-    if (darkModeToggle) darkModeToggle.disabled = false; // Ensure dark mode toggle is included
-    // Utility buttons
-    const labButton = document.getElementById('lab-values-button');
-    const calcButton = document.getElementById('calculator-button');
-    const reviewButton = document.getElementById('review-button');
-    const helpButton = document.getElementById('help-button');
-    const pauseButton = document.getElementById('pause-button'); // Added pause button
-    if (labButton) labButton.disabled = false;
-    if (calcButton) calcButton.disabled = false;
-    if (reviewButton) reviewButton.disabled = false;
-    if (helpButton) helpButton.disabled = false;
-    if (pauseButton) pauseButton.disabled = false;
+  console.log("UI Controller: Enabling controls...");
+  if (prevButton) prevButton.disabled = false;
+  if (nextButton) nextButton.disabled = false;
+  if (markCheckbox) markCheckbox.disabled = false;
+  if (darkModeToggle) darkModeToggle.disabled = false;
+  const labButton = document.getElementById("lab-values-button");
+  const calcButton = document.getElementById("calculator-button");
+  const reviewButton = document.getElementById("review-button");
+  const helpButton = document.getElementById("help-button");
+  const pauseButton = document.getElementById("pause-button");
+  if (labButton) labButton.disabled = false;
+  if (calcButton) calcButton.disabled = false;
+  if (reviewButton) reviewButton.disabled = false;
+  if (helpButton) helpButton.disabled = false;
+  if (pauseButton) pauseButton.disabled = false;
 }
 
 export function disableControls() {
-    console.log("UI Controller: Disabling controls...");
-    if (prevButton) prevButton.disabled = true;
-    if (nextButton) nextButton.disabled = true;
-    if (markCheckbox) markCheckbox.disabled = true;
-    if (darkModeToggle) darkModeToggle.disabled = true;
-    // Utility buttons
-    const labButton = document.getElementById('lab-values-button');
-    const calcButton = document.getElementById('calculator-button');
-    const reviewButton = document.getElementById('review-button');
-    const helpButton = document.getElementById('help-button');
-    const pauseButton = document.getElementById('pause-button'); // Added pause button
-    if (labButton) labButton.disabled = true;
-    if (calcButton) calcButton.disabled = true;
-    if (reviewButton) reviewButton.disabled = true;
-    if (helpButton) helpButton.disabled = true;
-    if (pauseButton) pauseButton.disabled = true;
+  console.log("UI Controller: Disabling controls...");
+  if (prevButton) prevButton.disabled = true;
+  if (nextButton) nextButton.disabled = true;
+  if (markCheckbox) markCheckbox.disabled = true;
+  if (darkModeToggle) darkModeToggle.disabled = true;
+  const labButton = document.getElementById("lab-values-button");
+  const calcButton = document.getElementById("calculator-button");
+  const reviewButton = document.getElementById("review-button");
+  const helpButton = document.getElementById("help-button");
+  const pauseButton = document.getElementById("pause-button");
+  if (labButton) labButton.disabled = true;
+  if (calcButton) calcButton.disabled = true;
+  if (reviewButton) reviewButton.disabled = true;
+  if (helpButton) helpButton.disabled = true;
+  if (pauseButton) pauseButton.disabled = true;
 }
 
 // --- Dark Mode Functions ---
 function enableDarkMode() {
-    bodyElement.classList.add('dark-mode');
-    if (darkModeToggle) darkModeToggle.checked = true;
-    localStorage.setItem('theme', 'dark');
-    console.log("Dark Mode Enabled"); // Console log for verification
+  bodyElement.classList.add("dark-mode");
+  // No toggle checkbox needed here, just apply the class
+  localStorage.setItem("theme", "dark");
+  console.log("Dark Mode Enabled");
 }
 
 function disableDarkMode() {
-    bodyElement.classList.remove('dark-mode');
-    if (darkModeToggle) darkModeToggle.checked = false;
-    localStorage.setItem('theme', 'light');
-    console.log("Dark Mode Disabled"); // Console log for verification
+  bodyElement.classList.remove("dark-mode");
+  localStorage.setItem("theme", "light");
+  console.log("Dark Mode Disabled");
 }
 
 export function toggleDarkMode() {
-    if (bodyElement.classList.contains('dark-mode')) {
-        disableDarkMode();
-    } else {
-        enableDarkMode();
-    }
+  if (bodyElement.classList.contains("dark-mode")) {
+    disableDarkMode();
+  } else {
+    enableDarkMode();
+  }
 }
 
 export function applySavedTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        enableDarkMode();
-    } else {
-        // Default to light mode
-        disableDarkMode();
-    }
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    enableDarkMode();
+  } else {
+    disableDarkMode(); // Default to light
+  }
+}
+
+// --- Modal Opening/Closing Logic ---
+function openModal(modalElement) {
+  if (!modalElement) {
+    console.error("Cannot open modal: Element not found.");
+    return;
+  }
+  modalElement.style.display = "block";
+  modalElement.classList.remove("hidden");
+  bodyElement.classList.add("modal-open");
+}
+
+function closeModal(modalElement) {
+  if (!modalElement) {
+    console.error("Cannot close modal: Element not found.");
+    return;
+  }
+  modalElement.style.display = "none";
+  modalElement.classList.add("hidden");
+  // Only remove modal-open if no other modals are open
+  // Simple check: are any elements with class 'modal' not hidden?
+  const anyModalOpen = Array.from(document.querySelectorAll(".modal")).some(
+    (modal) => !modal.classList.contains("hidden")
+  );
+  if (!anyModalOpen) {
+    bodyElement.classList.remove("modal-open");
+  }
 }
 
 // --- Review Modal Logic ---
-// Store the event listener function to allow removal
 let reviewListClickListener = null;
 
-function handleReviewNavigation(event) {
-    if (event.target.tagName === 'SPAN' && event.target.dataset.questionIndex) {
-        const index = parseInt(event.target.dataset.questionIndex, 10);
-        console.log(`UI Controller: Review navigation clicked for index ${index}`);
-        // Dispatch custom event to notify renderer/examManager
-        const navigateEvent = new CustomEvent('navigateToQuestion', { 
-            detail: { questionIndex: index },
-            bubbles: true // Allow event to bubble up if needed
-        });
-        document.dispatchEvent(navigateEvent);
-        console.log("UI Controller: Dispatched navigateToQuestion event.");
+// Modify openReviewModal to accept state arrays
+export function openReviewModal(questions, userAnswers, markedQuestions) {
+  console.log("UI Controller: Opening Review Modal...");
+  if (!reviewModal) return;
+  // Pass state arrays to populateReviewList
+  populateReviewList(questions, userAnswers, markedQuestions);
+  openModal(reviewModal);
 
-        closeReviewModal(); // Close modal after triggering navigation
-    }
+  // Keep track of the filter change listener to remove it later if needed
+  const filterChangeListener = (event) =>
+    populateReviewList(
+      questions,
+      userAnswers,
+      markedQuestions,
+      event.target.value
+    );
+
+  if (closeReviewButton) {
+    // Use an anonymous function for the close listener to avoid issues with `this`
+    // and ensure removal works correctly if we needed complex removal later.
+    // Using once:true is simpler here.
+    const closeHandler = () => {
+      closeModal(reviewModal);
+      // Clean up filter listeners when modal closes
+      filterRadios.forEach((radio) => {
+        radio.removeEventListener("change", filterChangeListener);
+      });
+      // REVIEW: Do we still need reviewListClickListener cleanup?
+      // The listeners are now on the items, which are cleared by innerHTML.
+      // Let's remove this cleanup for now.
+      /*
+      if (reviewList && reviewListClickListener) {
+        console.log("UI Controller: Removing review list listener in closeHandler.");
+        reviewList.removeEventListener("click", reviewListClickListener);
+        reviewListClickListener = null; // Clear the reference
+      }
+      */
+    };
+    closeReviewButton.addEventListener("click", closeHandler, { once: true });
+  }
+
+  // Add filter listeners
+  filterRadios.forEach((radio) => {
+    // Remove previous listener first before adding
+    radio.removeEventListener("change", filterChangeListener);
+    radio.addEventListener("change", filterChangeListener);
+  });
+
+  // REMOVE event delegation listener setup from here
+  /*
+  // Remove previous list listener if it exists before adding a new one
+  if (reviewList && reviewListClickListener) {
+    console.log("UI Controller: Removing existing review list listener before adding new one.");
+    reviewList.removeEventListener("click", reviewListClickListener);
+  }
+  // Store the new listener function reference
+  reviewListClickListener = handleReviewNavigation;
+  if (reviewList) {
+    console.log("UI Controller: Adding review list listener.");
+    reviewList.addEventListener("click", reviewListClickListener);
+  }
+  */
 }
 
-export function openReviewModal() {
-    console.log("UI Controller: Opening Review Modal...");
-    if (!reviewModal) {
-        console.error("Review modal element not found!");
-        return;
-    }
-    populateReviewList(); // Populate with 'all' filter initially
-    reviewModal.style.display = 'block';
-    bodyElement.classList.add('modal-open'); // Use bodyElement defined earlier
+// Modify populateReviewList signature and usage of state variables
+function populateReviewList(
+  questions,
+  userAnswers,
+  markedQuestions,
+  filter = "all"
+) {
+  console.log(`UI Controller: Populating review list with filter: ${filter}`);
+  if (!reviewList) return;
 
-    // Add listeners when modal opens
-    if (closeReviewButton) {
-        closeReviewButton.addEventListener('click', closeReviewModal);
+  // Check if the passed arrays are valid
+  if (
+    !questions ||
+    !userAnswers ||
+    !markedQuestions ||
+    questions.length === 0
+  ) {
+    console.error(
+      "UI Controller: Invalid or empty state arrays passed to populateReviewList!"
+    );
+    reviewList.innerHTML = "<li>Error: Exam state not available.</li>";
+    return;
+  }
+
+  reviewList.innerHTML = ""; // Clear previous list
+  const numQuestions = questions.length;
+  let filteredIndices = [];
+
+  for (let i = 0; i < numQuestions; i++) {
+    let include = false;
+    // Use the passed parameters directly
+    const isAnswered = userAnswers[i] !== null && userAnswers[i] !== undefined;
+    const isMarked = markedQuestions[i] === true;
+
+    switch (filter) {
+      case "answered":
+        include = isAnswered;
+        break;
+      case "unanswered":
+        include = !isAnswered;
+        break;
+      case "marked":
+        include = isMarked;
+        break;
+      default:
+        include = true;
+        break;
     }
-    filterRadios.forEach(radio => {
-        radio.addEventListener('change', () => populateReviewList(radio.value));
+    if (include) filteredIndices.push(i);
+  }
+
+  if (filteredIndices.length === 0) {
+    reviewList.innerHTML = "<li>No questions match this filter.</li>";
+    return;
+  }
+
+  filteredIndices.forEach((index) => {
+    const listItem = document.createElement("li");
+    // Use the passed parameters directly
+    const isAnswered =
+      userAnswers[index] !== null && userAnswers[index] !== undefined;
+    const isMarked = markedQuestions[index] === true;
+    let statusText = isAnswered ? "Answered" : "Unanswered";
+    if (isMarked) statusText += ", Marked";
+
+    // Use a SPAN for the clickable number
+    listItem.innerHTML = `<span class="review-item-link" data-question-index="${index}">Question ${
+      index + 1
+    }</span>: <span class="status status-${
+      isAnswered ? "answered" : "unanswered"
+    }${isMarked ? " status-marked" : ""}">${statusText}</span>`;
+
+    // Add direct click listener to the list item (Original Approach)
+    listItem.addEventListener("click", () => {
+      console.log(
+        `UI Controller: Review item ${
+          index + 1
+        } clicked. Dispatching navigateToQuestion.`
+      );
+      const navigateEvent = new CustomEvent("navigateToQuestion", {
+        detail: { questionIndex: index },
+        bubbles: true,
+      });
+      document.dispatchEvent(navigateEvent);
+      closeModal(reviewModal);
     });
 
-    // Remove previous listener before adding a new one to prevent duplicates
-    if (reviewList && reviewListClickListener) {
-        reviewList.removeEventListener('click', reviewListClickListener);
-    }
-    reviewListClickListener = handleReviewNavigation; // Store the new listener
-    if (reviewList) {
-        reviewList.addEventListener('click', reviewListClickListener);
-        console.log("UI Controller: Review list click listener attached.");
-    } else {
-        console.error("Review list element not found for attaching listener!")
-    }
-}
-
-function closeReviewModal() {
-    console.log("UI Controller: Closing Review Modal...");
-    if (!reviewModal) return;
-    reviewModal.style.display = 'none';
-    bodyElement.classList.remove('modal-open'); // Use bodyElement defined earlier
-
-    // Remove listeners when modal closes to prevent memory leaks
-    if (closeReviewButton) {
-        closeReviewButton.removeEventListener('click', closeReviewModal);
-    }
-    // It's often okay to leave 'change' listeners on radios unless they cause issues
-    // filterRadios.forEach(radio => { radio.removeEventListener('change', ...); }); 
-
-    // Remove the specific click listener from the list
-    if (reviewList && reviewListClickListener) {
-        reviewList.removeEventListener('click', reviewListClickListener);
-        reviewListClickListener = null; // Clear the stored listener
-        console.log("UI Controller: Review list click listener removed.");
-    }
-}
-
-// Populates the review list based on the selected filter
-function populateReviewList(filter = 'all') {
-    console.log(`UI Controller: Populating review list with filter: ${filter}`);
-    if (!reviewList) {
-        console.error("Review list element not found!");
-        return;
-    }
-    if (!questionsRef || !userAnswersRef || !markedQuestionsRef || questionsRef.length === 0) {
-         console.error("UI Controller references not set or questions array empty!");
-         reviewList.innerHTML = '<li>Error: Exam state not available.</li>';
-         return;
-    }
-
-    reviewList.innerHTML = ''; // Clear previous list
-    const numQuestions = questionsRef.length;
-    let filteredIndices = [];
-
-    for (let i = 0; i < numQuestions; i++) {
-        let include = false;
-        const isAnswered = userAnswersRef[i] !== null && userAnswersRef[i] !== undefined;
-        const isMarked = markedQuestionsRef[i] === true;
-
-        switch (filter) {
-            case 'answered':
-                include = isAnswered;
-                break;
-            case 'unanswered':
-                include = !isAnswered;
-                break;
-            case 'marked':
-                include = isMarked;
-                break;
-            default: // 'all'
-                include = true;
-                break;
-        }
-        if (include) {
-            filteredIndices.push(i);
-        }
-    }
-
-    if (filteredIndices.length === 0) {
-        const noItemsMessage = document.createElement('li');
-        noItemsMessage.textContent = 'No questions match this filter.';
-        noItemsMessage.style.textAlign = 'center';
-        noItemsMessage.style.marginTop = '20px';
-        reviewList.appendChild(noItemsMessage);
-        return;
-    }
-
-    filteredIndices.forEach(index => {
-        const listItem = document.createElement('li');
-        listItem.style.marginBottom = '5px'; // Add some spacing
-
-        const questionLink = document.createElement('span');
-        questionLink.textContent = `Question ${index + 1}`;
-        questionLink.dataset.questionIndex = index; // Store index for navigation
-        questionLink.style.cursor = 'pointer';
-        questionLink.style.textDecoration = 'underline';
-        questionLink.style.color = 'var(--link-color, blue)'; // Use CSS variable or default
-        questionLink.setAttribute('role', 'button'); // Improve accessibility
-        questionLink.setAttribute('aria-label', `Go to Question ${index + 1}`);
-
-        listItem.appendChild(questionLink);
-
-        const statusDiv = document.createElement('div');
-        statusDiv.style.marginLeft = '15px';
-        statusDiv.style.display = 'inline-block';
-        statusDiv.style.fontSize = '0.9em';
-
-        let statusText = [];
-        if (markedQuestionsRef[index]) {
-            statusText.push('<span style="color: orange;">(Marked)</span>');
-        }
-        if (userAnswersRef[index] !== null && userAnswersRef[index] !== undefined) {
-            statusText.push('<span style="color: green;">(Answered)</span>');
-        } else {
-            statusText.push('<span style="color: red;">(Unanswered)</span>');
-        }
-        statusDiv.innerHTML = statusText.join(' '); // Use innerHTML to render spans
-
-        listItem.appendChild(statusDiv);
-        reviewList.appendChild(listItem);
-    });
+    reviewList.appendChild(listItem);
+  });
 }
 
 // --- Help Modal Logic ---
-export function showHelp() {
-    console.log("UI Controller: Showing help modal...");
-    if (!helpModal) {
-        console.error("Help modal element not found!");
-        return;
-    }
-    helpModal.classList.remove('hidden');
-    bodyElement.classList.add('modal-open'); // Reuse bodyElement
-
-    // Add listeners specifically when the modal is opened
-    if (closeHelpButton) {
-        closeHelpButton.addEventListener('click', closeHelpModal);
-    }
-    // Optional: Close on background click
-    helpModal.addEventListener('click', handleHelpBackgroundClick);
+export function openHelpModal() {
+  console.log("UI Controller: Opening Help Modal...");
+  if (!helpModal) return;
+  openModal(helpModal);
+  if (closeHelpButton) {
+    closeHelpButton.addEventListener("click", () => closeModal(helpModal), {
+      once: true,
+    });
+  }
+  // Optional: Add background click listener to close
+  helpModal.addEventListener("click", handleModalBackgroundClick, {
+    once: true,
+  });
 }
 
-function closeHelpModal() {
-    console.log("UI Controller: Closing help modal...");
-    if (!helpModal) return;
-    helpModal.classList.add('hidden');
-    bodyElement.classList.remove('modal-open');
+// --- Calculator Logic ---
+let firstOperand = "";
+let secondOperand = "";
+let currentOperator = null;
+let shouldResetDisplay = false;
 
-    // Remove listeners when closing to prevent memory leaks
-    if (closeHelpButton) {
-        closeHelpButton.removeEventListener('click', closeHelpModal);
+export function openCalculatorModal() {
+  console.log("UI Controller: Opening Calculator Modal...");
+  if (!calculatorModal) return;
+  clearCalculator(); // Reset on open
+  openModal(calculatorModal);
+
+  // Define the close handler function once
+  const closeHandler = () => {
+    closeModal(calculatorModal);
+    // Remove the button listener when closing
+    if (calculatorButtons) {
+      calculatorButtons.removeEventListener(
+        "click",
+        handleCalculatorButtonClick
+      );
     }
-    helpModal.removeEventListener('click', handleHelpBackgroundClick);
-}
+    // Remove the background click listener (if it was added)
+    calculatorModal.removeEventListener("click", handleModalBackgroundClick);
+  };
 
-// Helper for background click closure
-function handleHelpBackgroundClick(event) {
-    if (event.target === helpModal) { // Check if the click is directly on the modal background
-        closeHelpModal();
-    }
-}
+  if (closeCalculatorButton) {
+    // Use the defined handler, ensure it's removed after firing
+    closeCalculatorButton.addEventListener("click", closeHandler, {
+      once: true,
+    });
+  }
 
-// --- Calculator Modal Logic ---
-let calcCurrentInput = '0';
-let calcOperator = null;
-let calcPreviousInput = null;
-let calcWaitingForSecondOperand = false;
+  // Add listener for calculator buttons
+  if (calculatorButtons) {
+    // Remove any previous listener before adding a new one (belt-and-suspenders)
+    calculatorButtons.removeEventListener("click", handleCalculatorButtonClick);
+    calculatorButtons.addEventListener("click", handleCalculatorButtonClick);
+  }
 
-// Store the event listener function to allow removal
-let calculatorButtonsClickListener = null;
-
-export function openCalculator() {
-    console.log("UI Controller: Opening Calculator...");
-    if (!calculatorModal || !calculatorDisplay || !calculatorButtons || !closeCalculatorButton) {
-        console.error("Calculator elements not found!");
-        return;
-    }
-    // Reset calculator state when opening
-    calcCurrentInput = '0';
-    calcOperator = null;
-    calcPreviousInput = null;
-    calcWaitingForSecondOperand = false;
-    calculatorDisplay.value = calcCurrentInput;
-
-    calculatorModal.classList.remove('hidden');
-    bodyElement.classList.add('modal-open');
-
-    // Attach listeners when opening
-    closeCalculatorButton.addEventListener('click', closeCalculatorModal);
-    // Remove previous listener before adding a new one to prevent duplicates
-    if (calculatorButtonsClickListener) {
-        calculatorButtons.removeEventListener('click', calculatorButtonsClickListener);
-    }
-    calculatorButtonsClickListener = handleCalculatorButtonClick; // Store listener
-    calculatorButtons.addEventListener('click', calculatorButtonsClickListener);
-}
-
-function closeCalculatorModal() {
-    console.log("UI Controller: Closing Calculator...");
-    if (!calculatorModal || !calculatorButtons || !closeCalculatorButton) return;
-
-    calculatorModal.classList.add('hidden');
-    bodyElement.classList.remove('modal-open');
-
-    // Detach listeners when closing
-    closeCalculatorButton.removeEventListener('click', closeCalculatorModal);
-    if (calculatorButtonsClickListener) {
-        calculatorButtons.removeEventListener('click', calculatorButtonsClickListener);
-        calculatorButtonsClickListener = null; // Clear stored listener
-    }
+  // Optional: Add background click listener to close
+  // Ensure this listener also uses the same cleanup logic
+  calculatorModal.addEventListener(
+    "click",
+    (event) => {
+      // Check if the click is on the background itself
+      if (event.target === calculatorModal) {
+        closeHandler();
+      }
+    },
+    { once: true }
+  ); // Let's try once:true here too, simpler cleanup
 }
 
 function handleCalculatorButtonClick(event) {
-    const { target } = event;
-    if (!target.matches('button')) return; // Only handle button clicks
+  const target = event.target;
+  if (target.tagName !== "BUTTON") return; // Ignore clicks outside buttons
 
-    const action = target.dataset.action;
-    const value = target.textContent;
+  event.stopPropagation(); // Prevent background click handler from firing
 
-    if (!action) { // Number button
-        inputDigit(value);
-    } else if (action === 'decimal') {
-        inputDecimal();
-    } else if (action === 'clear') {
-        clearCalculator();
-    } else if (action === 'calculate') {
-        handleOperator('='); // Treat '=' as an operator for calculation
-    } else { // Operator button (+, -, *, /)
-        handleOperator(action);
-    }
-    // Update display after every button press
-    if (calculatorDisplay) calculatorDisplay.value = calcCurrentInput;
+  const value = target.dataset.value;
+
+  if (value >= "0" && value <= "9") {
+    inputDigit(value);
+  } else if (value === ".") {
+    inputDecimal();
+  } else if (value === "C") {
+    clearCalculator();
+  } else if (value === "=") {
+    calculateResult();
+  } else {
+    // Operator (+, -, *, /)
+    handleOperator(value);
+  }
+}
+
+function updateCalculatorDisplay(value) {
+  if (calculatorDisplay) calculatorDisplay.value = value;
 }
 
 function inputDigit(digit) {
-    if (calcWaitingForSecondOperand) {
-        calcCurrentInput = digit;
-        calcWaitingForSecondOperand = false;
-    } else {
-        // Prevent multiple leading zeros
-        calcCurrentInput = calcCurrentInput === '0' ? digit : calcCurrentInput + digit;
-    }
+  if (calculatorDisplay.value === "0" || shouldResetDisplay) {
+    updateCalculatorDisplay(digit);
+    shouldResetDisplay = false;
+  } else {
+    updateCalculatorDisplay(calculatorDisplay.value + digit);
+  }
 }
 
 function inputDecimal() {
-    if (calcWaitingForSecondOperand) {
-        calcCurrentInput = '0.';
-        calcWaitingForSecondOperand = false;
-        return;
-    }
-    // If the current input does not contain a decimal point
-    if (!calcCurrentInput.includes('.')) {
-        calcCurrentInput += '.';
-    }
+  if (shouldResetDisplay) {
+    updateCalculatorDisplay("0.");
+    shouldResetDisplay = false;
+    return;
+  }
+  if (!calculatorDisplay.value.includes(".")) {
+    updateCalculatorDisplay(calculatorDisplay.value + ".");
+  }
 }
 
 function clearCalculator() {
-    calcCurrentInput = '0';
-    calcOperator = null;
-    calcPreviousInput = null;
-    calcWaitingForSecondOperand = false;
+  firstOperand = "";
+  secondOperand = "";
+  currentOperator = null;
+  shouldResetDisplay = false;
+  updateCalculatorDisplay("0");
 }
 
 function handleOperator(nextOperator) {
-    const inputValue = parseFloat(calcCurrentInput);
+  const inputValue = parseFloat(calculatorDisplay.value);
 
-    // Handle the first operator or changing operators
-    if (calcOperator && calcWaitingForSecondOperand) {
-        calcOperator = nextOperator;
-        return;
-    }
+  if (currentOperator && !shouldResetDisplay) {
+    // If there's already an operator and we haven't just calculated,
+    // perform the previous operation first
+    secondOperand = inputValue;
+    const result = performCalculation();
+    updateCalculatorDisplay(String(result));
+    firstOperand = String(result);
+  } else {
+    // First operator or operator after calculation
+    firstOperand = calculatorDisplay.value;
+  }
 
-    // If previousInput is null, store the current input as previousInput
-    if (calcPreviousInput == null) {
-        calcPreviousInput = inputValue;
-    } else if (calcOperator) {
-        // If there's already an operator, perform the calculation
-        const result = performCalculation[calcOperator](calcPreviousInput, inputValue);
-        calcCurrentInput = String(result);
-        calcPreviousInput = result;
-    }
-
-    calcWaitingForSecondOperand = true;
-    calcOperator = nextOperator === '=' ? null : nextOperator; // Reset operator if '=' was pressed
+  currentOperator = nextOperator;
+  shouldResetDisplay = true; // Next digit input should clear the display
 }
 
-const performCalculation = {
-    '/': (firstOperand, secondOperand) => secondOperand === 0 ? 'Error' : firstOperand / secondOperand,
-    '*': (firstOperand, secondOperand) => firstOperand * secondOperand,
-    '+': (firstOperand, secondOperand) => firstOperand + secondOperand,
-    '-': (firstOperand, secondOperand) => firstOperand - secondOperand,
-    // '=': (firstOperand, secondOperand) => secondOperand // '=' doesn't need calculation here, handled in handleOperator
-};
+function calculateResult() {
+  if (currentOperator === null || shouldResetDisplay) {
+    // Nothing to calculate or tried hitting = twice
+    return;
+  }
+  if (secondOperand === "") {
+    // Allow using the current display value if = is pressed after operator
+    secondOperand = calculatorDisplay.value;
+  } else {
+    // If second operand was set by previous calc, use firstOperand
+    // This logic might need refinement depending on desired behavior
+    // For now, assume the display holds the second operand
+    secondOperand = calculatorDisplay.value;
+  }
 
-// --- Highlighting Logic ---
-// Clears any previously applied text highlights
+  const result = performCalculation();
+  updateCalculatorDisplay(String(result));
+  currentOperator = null;
+  firstOperand = String(result); // Store result for potential chaining
+  secondOperand = "";
+  // shouldResetDisplay remains true? Or set to false? Let's set to true so next digit starts new number
+  shouldResetDisplay = true;
+}
+
+function performCalculation() {
+  const prev = parseFloat(firstOperand);
+  const current = parseFloat(secondOperand);
+  if (isNaN(prev) || isNaN(current)) return NaN; // Handle potential parse errors
+
+  switch (currentOperator) {
+    case "+":
+      return prev + current;
+    case "-":
+      return prev - current;
+    case "*":
+      return prev * current;
+    case "/":
+      return current === 0 ? "Error" : prev / current;
+    default:
+      return current; // Should not happen
+  }
+}
+
+// --- Lab Panel Control ---
+// The actual panel logic is in labValues.js
+// This function is called by the button listener in renderer.js
+export function showLabValues() {
+  console.log("UI Controller: Requesting to show Lab Values panel...");
+  // Call the function imported from labValues.js
+  if (typeof openLabValuesPanel === "function") {
+    openLabValuesPanel();
+  } else {
+    console.error("openLabValuesPanel function not found or not imported!");
+  }
+}
+
+// --- Helper for Modal Background Clicks ---
+function handleModalBackgroundClick(event) {
+  // Close modal only if the click target *is* the modal container itself
+  // (the semi-transparent background) and not its content.
+  if (event.target === helpModal) {
+    closeModal(helpModal);
+    // Remove the listener we added
+    helpModal.removeEventListener("click", handleModalBackgroundClick);
+  }
+  if (event.target === calculatorModal) {
+    closeModal(calculatorModal);
+    // Remove the button listener when closing via background
+    if (calculatorButtons) {
+      calculatorButtons.removeEventListener(
+        "click",
+        handleCalculatorButtonClick
+      );
+    }
+    // Remove the listener we added
+    calculatorModal.removeEventListener("click", handleModalBackgroundClick);
+  }
+  // Note: Review modal close is handled differently (only via close button)
+}
+
+// --- Text Highlighting --- (Replaced with original logic)
+
+// Original handleHighlightSelection
+function handleHighlightSelection(event) {
+  // Changed from no arg to event
+  console.log("handleHighlightSelection called");
+
+  // Debug information
+  console.log("Event target:", event.target);
+  console.log("Event currentTarget:", event.currentTarget);
+  console.log("Question text element ID:", questionTextDiv.id);
+  console.log("Question text element classes:", questionTextDiv.className);
+
+  // Use event.currentTarget which IS the .question-text element the listener was attached to
+  const questionTextElement = event.currentTarget;
+
+  const selection = window.getSelection();
+  // Exit if no selection or selection is empty (collapsed)
+  if (!selection.rangeCount || selection.isCollapsed) {
+    console.log("Highlight aborted: No selection range or selection collapsed");
+    return;
+  }
+
+  const range = selection.getRangeAt(0);
+
+  // Prevent highlighting if selection is zero width (e.g., just a click)
+  if (range.getBoundingClientRect().width === 0) {
+    console.log("Highlight aborted: Zero-width selection");
+    selection.removeAllRanges(); // Clear the collapsed selection
+    return;
+  }
+
+  // *** Add null check for the common ancestor container ***
+  if (!range.commonAncestorContainer) {
+    console.warn("Highlight aborted: Selection common ancestor is null.");
+    selection.removeAllRanges();
+    return;
+  }
+
+  // *** Add check if it's a valid Node ***
+  if (!(range.commonAncestorContainer instanceof Node)) {
+    console.warn(
+      "Highlight aborted: Selection common ancestor is not a valid Node:",
+      range.commonAncestorContainer
+    );
+    selection.removeAllRanges();
+    return;
+  }
+
+  // Check if the valid common ancestor Node is within the target element (event.currentTarget)
+  let isContained = false;
+  try {
+    // --- Wrap this check in try...catch ---
+    isContained = questionTextElement.contains(range.commonAncestorContainer);
+  } catch (error) {
+    console.error("Error during .contains() check:", error); // Keep error logs
+    console.error("questionTextElement:", questionTextElement);
+    console.error("commonAncestorContainer:", range.commonAncestorContainer);
+    selection.removeAllRanges(); // Attempt to clear selection on error
+    console.log("Highlight aborted: Error during contains() check."); // <-- Add Log
+    return; // Exit if check fails
+  }
+
+  if (!isContained) {
+    console.log(
+      "Highlight aborted: Selection not contained within question text."
+    ); // <-- Add Log
+    selection.removeAllRanges(); // Clear selection if outside target area
+    return;
+  }
+
+  // If all checks pass, apply the highlight
+  console.log("Applying highlight..."); // <-- Add Log
+  applyHighlight(range);
+  // Selection is cleared within applyHighlight AFTER insertion
+}
+
+// Original applyHighlight
+function applyHighlight(range) {
+  // Create a span to wrap the selection
+  const highlightSpan = document.createElement("span");
+  highlightSpan.className = "highlighted-text"; // Use original class name
+
+  // Add click listener to the span itself for removal
+  highlightSpan.addEventListener("click", () => {
+    console.log("Highlight span clicked! Attempting to remove..."); // <-- ADD THIS LOG
+    removeHighlight(highlightSpan);
+  });
+
+  try {
+    // This might throw an error if the selection spans across
+    // elements that cannot contain a span, or crosses boundaries
+    // in complex ways. A more robust solution might involve iterating
+    // through nodes in the range.
+    range.surroundContents(highlightSpan);
+    window.getSelection().removeAllRanges(); // Clear selection after highlighting
+  } catch (e) {
+    console.error("Highlighting error: ", e);
+    // Optional: Provide feedback if highlighting fails
+    // alert("Could not highlight the selection. It might span across incompatible elements.");
+    // Attempt to clear selection even on error
+    window.getSelection().removeAllRanges();
+  }
+}
+
+// Original removeHighlight
+function removeHighlight(spanElement) {
+  const parent = spanElement.parentNode;
+  if (!parent) return;
+
+  // Move all child nodes of the span out before the span
+  while (spanElement.firstChild) {
+    parent.insertBefore(spanElement.firstChild, spanElement);
+  }
+  // Remove the now-empty span
+  parent.removeChild(spanElement);
+  parent.normalize(); // Merges adjacent text nodes (optional but good practice)
+}
+
+// Add the clearHighlights function (needed by renderQuestionUI)
 function clearHighlights() {
-    // Check if highlightedElements exists and has elements
-    if (highlightedElements && highlightedElements.length > 0) {
-        console.log(`UI Controller: Clearing ${highlightedElements.length} highlights.`);
-        highlightedElements.forEach(span => {
-            // Replace the span with its text content
-            if (span.parentNode) {
-                 const textNode = document.createTextNode(span.textContent);
-                 span.parentNode.replaceChild(textNode, span);
-                 // Normalize the parent to merge adjacent text nodes
-                 span.parentNode.normalize(); 
-            } else {
-                console.warn("Highlighted span parent not found during clearing.");
-            }
-        });
-    } else {
-        // console.log("UI Controller: No highlights to clear.");
+  // Find all highlight spans and replace them with their text content
+  const highlights = document.querySelectorAll("span.highlighted-text"); // Use original class name
+  highlights.forEach((span) => {
+    const parent = span.parentNode;
+    if (parent) {
+      while (span.firstChild) {
+        parent.insertBefore(span.firstChild, span);
+      }
+      parent.removeChild(span);
+      // Normalize the parent node to merge adjacent text nodes
+      parent.normalize();
     }
-     // It might be safer to query again if dynamic highlights are added/removed elsewhere
-     // highlightedElements = document.querySelectorAll('.highlight'); 
+  });
 }
 
-// --- Question Rendering Logic ---
-export function renderQuestionUI(questionData, currentIndex, totalQuestions, userAnswer, isMarked) {
-    console.log(`UI Controller: Rendering question ${currentIndex + 1}`);
-    if (!questionData) {
-        console.error("renderQuestionUI: questionData is missing!");
-        if (questionTextDiv) questionTextDiv.innerHTML = '<p style="color: red;">Error: Question data is missing.</p>';
-        if (optionsList) optionsList.innerHTML = '';
-        return;
+// --- Question Rendering --- // Ensure listener attachment matches original
+export function renderQuestionUI(
+  questionData,
+  currentIndex,
+  totalQuestions,
+  userAnswer,
+  isMarked
+) {
+  if (!questionData) {
+    if (questionTextDiv)
+      questionTextDiv.innerHTML = "Error: Question data is missing.";
+    if (optionsList) optionsList.innerHTML = "";
+    return;
+  }
+
+  // Clear previous dynamic content
+  if (optionsList) optionsList.innerHTML = "";
+  if (feedbackDiv) {
+    feedbackDiv.innerHTML = "";
+    feedbackDiv.classList.add("hidden");
+  }
+  if (explanationDiv) {
+    explanationDiv.innerHTML = "";
+    explanationDiv.classList.add("hidden");
+  }
+  clearHighlights(); // Clear text highlights from previous question
+
+  // Update header info (Question number/total)
+  if (examSectionItemSpan) {
+    examSectionItemSpan.textContent = `Question ${
+      currentIndex + 1
+    } of ${totalQuestions}`;
+  }
+
+  // Update question text (handle potential HTML)
+  if (questionTextDiv) {
+    questionTextDiv.innerHTML =
+      questionData.text || questionData.question || "Question text not found.";
+    // Re-attach highlight listener AFTER setting new content (Original approach)
+    // Remove old listener first to prevent duplicates
+    questionTextDiv.removeEventListener("mouseup", handleHighlightSelection);
+    questionTextDiv.addEventListener("mouseup", handleHighlightSelection);
+    console.log("Highlight listener attached to question text");
+  }
+
+  // Display image if path exists
+  const imageContainer =
+    document.getElementById("question-image-container") ||
+    createDiv("question-image-container"); // Assuming an ID or create one
+  if (questionData.image) {
+    // Construct correct path assuming images are relative to 'questions and answers'
+    imageContainer.innerHTML = `<img src="questions and answers/${questionData.image}" alt="Question image">`;
+    // Ensure container is added to the DOM (e.g., after question text)
+    if (
+      questionTextDiv &&
+      !document.getElementById("question-image-container")
+    ) {
+      questionTextDiv.parentNode.insertBefore(
+        imageContainer,
+        questionTextDiv.nextSibling
+      );
     }
+  } else {
+    imageContainer.innerHTML = ""; // Clear image if none
+  }
 
-    // 1. Clear previous highlights
-    clearHighlights();
+  // Render Options (Handle both array and object formats)
+  const options = questionData.options;
+  let optionLetterCode = 65; // ASCII for 'A'
 
-    // 2. Update Question Header Info
-    if (questionNumberSpan) questionNumberSpan.textContent = currentIndex + 1;
-    if (totalQuestionsSpan) totalQuestionsSpan.textContent = totalQuestions;
-    if (examSectionItemSpan) examSectionItemSpan.textContent = questionData.section || 'N/A'; // Handle missing section
-
-    // 3. Display Question Text (use innerHTML to render potential formatting)
-    if (questionTextDiv) {
-        // Use 'text' property from JSON, provide fallback
-        questionTextDiv.innerHTML = questionData.text || "Error: Question text missing.";
-    } else {
-        console.error("Question text div not found for question", currentIndex);
+  if (Array.isArray(options)) {
+    // --- ARRAY FORMAT ---
+    options.forEach((optionText, index) => {
+      const optionLetter = String.fromCharCode(optionLetterCode + index);
+      createOptionElement(
+        optionLetter,
+        optionText,
+        index,
+        currentIndex,
+        userAnswer
+      );
+    });
+  } else if (typeof options === "object" && options !== null) {
+    // --- OBJECT FORMAT ---
+    for (const optionLetter in options) {
+      if (options.hasOwnProperty(optionLetter)) {
+        const optionText = options[optionLetter];
+        // Use the letter itself as the value for object format
+        createOptionElement(
+          optionLetter,
+          optionText,
+          optionLetter,
+          currentIndex,
+          userAnswer
+        );
+      }
     }
+  } else {
+    if (optionsList)
+      optionsList.innerHTML = "<li>Error: Invalid options format.</li>";
+  }
 
-    // 4. Clear previous options and feedback/explanation
-    if (optionsList) optionsList.innerHTML = '';
-    if (feedbackDiv) feedbackDiv.innerHTML = '';
-    if (explanationDiv) explanationDiv.innerHTML = '';
-    if (feedbackDiv) feedbackDiv.classList.add('hidden');
-    if (explanationDiv) explanationDiv.classList.add('hidden');
+  // Set marked checkbox status
+  if (markCheckbox) {
+    markCheckbox.checked = !!isMarked; // Ensure boolean
+  }
 
-    // 5. Populate Options
-    if (questionData.options && optionsList) {
-        if (typeof questionData.options === 'object' && questionData.options !== null && !Array.isArray(questionData.options)) {
-            Object.entries(questionData.options).forEach(([optionKey, optionText], optionIndex) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('option');
-
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = 'option';
-                input.value = optionKey;
-                input.id = `option-${optionIndex}`;
-                // Check if this option was the user's previous answer
-                if (userAnswer === optionKey) {
-                    input.checked = true;
-                }
-
-                const label = document.createElement('label');
-                label.htmlFor = `option-${optionIndex}`;
-                // Use innerHTML for options in case they contain formatting
-                label.innerHTML = `${optionKey}. ${optionText}`; 
-
-                listItem.appendChild(input);
-                listItem.appendChild(label);
-                optionsList.appendChild(listItem);
-            });
-        } else if (Array.isArray(questionData.options)) {
-            questionData.options.forEach((optionText, optionIndex) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('option');
-
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = 'option';
-                input.value = optionIndex;
-                input.id = `option-${optionIndex}`;
-                // Check if this option was the user's previous answer
-                if (userAnswer === optionIndex) {
-                    input.checked = true;
-                }
-
-                const label = document.createElement('label');
-                label.htmlFor = `option-${optionIndex}`;
-                // Use innerHTML for options in case they contain formatting
-                label.innerHTML = `${String.fromCharCode(65 + optionIndex)}. ${optionText}`; 
-
-                listItem.appendChild(input);
-                listItem.appendChild(label);
-                optionsList.appendChild(listItem);
-            });
-        } else {
-            console.error(`Question ${currentIndex} options format is invalid:`, questionData.options);
-            optionsList.innerHTML = '<li>Error: Invalid options format</li>';
-        }
-    } else {
-        console.error("Options list element not found or no options provided for question", currentIndex);
-        if (optionsList) optionsList.innerHTML = '<li>Error loading options.</li>'; // Provide feedback
-    }
-
-    // 6. Update 'Mark Question' Checkbox
-    if (markCheckbox) {
-        markCheckbox.checked = isMarked;
-    }
-
-    // 7. Show Feedback/Explanation if already answered
-    if (userAnswer !== null && userAnswer !== undefined) {
-        console.log(`UI Controller: Question ${currentIndex + 1} previously answered. Showing feedback.`);
-        if (feedbackDiv) {
-            const correctAnswerIndex = questionData.answer;
-            const isCorrect = userAnswer === correctAnswerIndex;
-            feedbackDiv.innerHTML = isCorrect
-                ? `<p class="correct">Correct!</p>`
-                : `<p class="incorrect">Incorrect. The correct answer was option ${correctAnswerIndex !== undefined ? correctAnswerIndex + 1 : 'N/A'}.</p>`;
-            feedbackDiv.classList.remove('hidden');
-        }
-        if (explanationDiv && questionData.explanation) {
-            explanationDiv.innerHTML = `<p><strong>Explanation:</strong> ${questionData.explanation}</p>`;
-            explanationDiv.classList.remove('hidden');
-        } else if (explanationDiv) {
-             explanationDiv.innerHTML = `<p><strong>Explanation:</strong> Not available.</p>`; // Show placeholder if missing
-             explanationDiv.classList.remove('hidden'); // Still show the section
-        }
-    }
+  // Re-apply strikethroughs for the current question if they exist
+  applyStoredStrikethroughs(currentIndex);
 }
 
-// --- Navigation Button Updates ---
+// Helper to create a single option element
+function createOptionElement(
+  optionLetter,
+  optionText,
+  optionValue,
+  questionIndex,
+  userAnswer
+) {
+  if (!optionsList) return;
+  const listItem = document.createElement("li");
+  listItem.classList.add("option");
+  // Use a data attribute for the option letter/value (consistent)
+  listItem.dataset.option = optionLetter; // Or optionValue? Let's use Letter for display
+  listItem.dataset.questionIndex = questionIndex; // Needed for event handlers
+
+  const radioInput = document.createElement("input");
+  radioInput.type = "radio";
+  radioInput.name = `question_${questionIndex}`; // Unique name per question
+  radioInput.value = optionValue; // Value to store ('A', 'B' or 0, 1)
+  radioInput.id = `option_${questionIndex}_${optionLetter}`;
+
+  const label = document.createElement("label");
+  label.htmlFor = radioInput.id;
+  // Display the letter before the text
+  label.innerHTML = `<span>${optionLetter})</span> ${optionText}`; // Use innerHTML to render potential HTML in optionText
+
+  listItem.appendChild(radioInput);
+  listItem.appendChild(label);
+  optionsList.appendChild(listItem);
+
+  // Check if this option was the user's answer
+  // Need careful comparison: userAnswer might be 'A', 'B' or '0', '1'
+  let isSelected = false;
+  if (userAnswer !== null && userAnswer !== undefined) {
+    // If userAnswer is string digit '0', '1', compare to index (optionValue if array)
+    // If userAnswer is letter 'A', 'B', compare to letter (optionValue if object)
+    if (String(userAnswer) === String(optionValue)) {
+      isSelected = true;
+    }
+  }
+
+  if (isSelected) {
+    radioInput.checked = true;
+    listItem.classList.add("selected");
+  }
+
+  // --- Add Event Listeners for interaction ---
+  // Left-click for selection
+  listItem.addEventListener("click", handleOptionClick);
+  // Right-click for strikethrough
+  listItem.addEventListener("contextmenu", handleOptionRightClick);
+}
+
+// --- Strikethrough Application --- (Moved from renderer?)
+// Needs access to `crossedOutOptions` from renderer state
+let crossedOutOptionsRef = {}; // Initialize as empty object { questionIndex: Set() }
+
+export function setStrikethroughReference(crossedOutOptions) {
+  crossedOutOptionsRef = crossedOutOptions;
+}
+
+function applyStoredStrikethroughs(questionIndex) {
+  if (!optionsList || !crossedOutOptionsRef[questionIndex]) return;
+
+  const struckOptions = crossedOutOptionsRef[questionIndex]; // Should be a Set
+  const optionElements = optionsList.querySelectorAll(".option");
+
+  optionElements.forEach((optLi) => {
+    const optionLetter = optLi.dataset.option;
+    if (struckOptions.has(optionLetter)) {
+      optLi.classList.add("crossed-out");
+    } else {
+      optLi.classList.remove("crossed-out"); // Ensure it's removed if not in Set
+    }
+  });
+}
+
+// Handle click and right-click need access to state (userAnswers, crossedOutOptions)
+// These might be better placed in renderer.js or passed as callbacks
+// Let's keep them here for now but ensure state is managed
+
+function handleOptionClick(event) {
+  const clickedOption = event.currentTarget;
+  const questionIndex = parseInt(clickedOption.dataset.questionIndex);
+  const optionValue = clickedOption.querySelector('input[type="radio"]').value;
+
+  // Dispatch an event for the renderer to handle the state update
+  const selectEvent = new CustomEvent("optionSelected", {
+    detail: { questionIndex, selectedValue: optionValue },
+    bubbles: true,
+  });
+  document.dispatchEvent(selectEvent);
+
+  // Update UI immediately for responsiveness
+  optionsList.querySelectorAll(".option").forEach((opt) => {
+    if (parseInt(opt.dataset.questionIndex) === questionIndex) {
+      opt.classList.remove("selected");
+      opt.querySelector('input[type="radio"]').checked = false;
+    }
+  });
+  clickedOption.classList.add("selected");
+  clickedOption.querySelector('input[type="radio"]').checked = true;
+}
+
+function handleOptionRightClick(event) {
+  event.preventDefault();
+  const clickedOption = event.currentTarget;
+  const questionIndex = parseInt(clickedOption.dataset.questionIndex);
+  const optionLetter = clickedOption.dataset.option; // Use the letter for strikethrough tracking
+
+  // Dispatch an event for the renderer to handle the state update
+  const strikethroughEvent = new CustomEvent("optionStrikethroughToggled", {
+    detail: { questionIndex, optionLetter },
+    bubbles: true,
+  });
+  document.dispatchEvent(strikethroughEvent);
+
+  // Update UI immediately
+  // If it was selected, deselect it visually first
+  if (clickedOption.classList.contains("selected")) {
+    clickedOption.classList.remove("selected");
+    clickedOption.querySelector('input[type="radio"]').checked = false;
+    // Also dispatch selection clear event
+    const selectEvent = new CustomEvent("optionSelected", {
+      detail: { questionIndex, selectedValue: null }, // Signal clearing
+      bubbles: true,
+    });
+    document.dispatchEvent(selectEvent);
+  }
+
+  clickedOption.classList.toggle("crossed-out");
+}
+
+// --- Navigation Buttons Update ---
 export function updateNavigationButtons(currentIndex, totalQuestions) {
-    console.log(`UI Controller: Updating nav buttons for index ${currentIndex} / ${totalQuestions}`);
-    if (prevButton) {
-        prevButton.disabled = currentIndex === 0;
-    }
-    if (nextButton) {
-        // Check if it's the last question
-        if (currentIndex === totalQuestions - 1) {
-            nextButton.textContent = 'Submit Exam';
-            nextButton.classList.add('submit-exam-button'); // Optional: Add class for styling
-        } else {
-            nextButton.textContent = 'Next';
-            nextButton.classList.remove('submit-exam-button'); // Optional: Remove class
-        }
-        // The button should generally be enabled unless there are no questions
-        nextButton.disabled = totalQuestions === 0;
-    }
-}
-
-// --- View Toggling Logic ---
-/**
- * Controls which main view is displayed ('welcome', 'exam', 'report').
- * @param {'welcome' | 'exam' | 'report'} viewName The name of the view to show.
- */
-export function showView(viewName) {
-    console.log(`UI Controller: Showing view - ${viewName}`);
-
-    // Ensure all containers exist before manipulating them
-    if (!welcomeScreenDiv || !appContainerDiv || !examArea || !reportArea) {
-        console.error("UI Controller: Cannot switch views, one or more layout containers missing!");
-        return;
-    }
-
-    // Hide all top-level containers initially
-    welcomeScreenDiv.style.display = 'none';
-    appContainerDiv.style.display = 'none'; // Hides examArea and reportArea too
-
-    switch (viewName) {
-        case 'welcome':
-            welcomeScreenDiv.style.display = 'block'; // Or 'flex', etc.
-            // Ensure app elements are hidden when welcome is shown
-            if (headerElement) headerElement.classList.add('hidden');
-            if (mainWrapper) mainWrapper.classList.add('hidden');
-            if (footerElement) footerElement.classList.add('hidden');
-            disableControls(); // Keep controls disabled on welcome screen
-            break;
-        case 'exam':
-            appContainerDiv.style.display = 'block'; // Show the main app container
-            examArea.classList.remove('hidden');
-            reportArea.classList.add('hidden');
-            // Make header, wrapper, and footer visible for the exam
-            if (headerElement) headerElement.classList.remove('hidden');
-            if (mainWrapper) mainWrapper.classList.remove('hidden');
-            if (footerElement) footerElement.classList.remove('hidden');
-            enableControls(); // Enable controls for the exam
-            break;
-        case 'report':
-            appContainerDiv.style.display = 'block'; // Show the main app container
-            examArea.classList.add('hidden');
-            reportArea.classList.remove('hidden');
-            // Hide header and footer, keep wrapper potentially for report styling
-            if (headerElement) headerElement.classList.add('hidden');
-            if (mainWrapper) mainWrapper.classList.add('hidden'); // Assuming report doesn't use main-wrapper layout
-            if (footerElement) footerElement.classList.add('hidden');
-            disableControls(); // Disable exam controls on report screen
-            // Note: Ensure restart button is handled separately if needed
-            break;
-        default:
-            console.error(`UI Controller: Unknown view name '${viewName}'. Defaulting to welcome view.`);
-            welcomeScreenDiv.style.display = 'block';
-            disableControls();
-    }
-}
-
-// --- Event Listener Setup for UI Controller ---
-document.addEventListener('DOMContentLoaded', () => {
-    applySavedTheme(); // Apply theme on load
-
-    // Dark Mode Toggle Listener
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('change', toggleDarkMode);
-        console.log("Dark mode toggle listener attached.");
+  if (prevButton) prevButton.disabled = currentIndex <= 0;
+  // Disable next button on the last question? Or change text to "Finish"?
+  // For now, let's disable it. Handling the finish action can be done in the event listener.
+  if (nextButton) {
+    // nextButton.disabled = currentIndex >= totalQuestions - 1;
+    // Let's change text instead
+    if (currentIndex >= totalQuestions - 1) {
+      nextButton.textContent = "Finish Exam";
     } else {
-        console.warn("Dark mode toggle element not found.");
+      nextButton.textContent = "Next";
     }
+    nextButton.disabled = false; // Keep it enabled to allow finishing
+  }
+}
 
-    // Show the initial welcome screen
-    showView('welcome');
+// --- View Switching --- (Using hidden class)
+export function showView(viewName) {
+  console.log(`UI Controller: Switching view to ${viewName}`);
+  // Hide all main containers first by adding 'hidden' class
+  if (welcomeScreenDiv) welcomeScreenDiv.classList.add("hidden");
+  if (appContainerDiv) appContainerDiv.classList.add("hidden");
+  if (reportArea) reportArea.classList.add("hidden");
 
-    // Other initializations if needed
+  // Show the requested container by removing 'hidden' class
+  switch (viewName) {
+    case "welcome":
+      if (welcomeScreenDiv) welcomeScreenDiv.classList.remove("hidden");
+      break;
+    case "exam":
+      if (appContainerDiv) {
+        appContainerDiv.classList.remove("hidden");
+        // ALSO remove the inline style that might be hiding it initially
+        appContainerDiv.style.display = ""; // Set to empty string to remove inline style
+      }
+      // Ensure these are visible within the app container if needed
+      if (headerElement) headerElement.classList.remove("hidden");
+      if (mainWrapper) mainWrapper.classList.remove("hidden");
+      if (footerElement) footerElement.classList.remove("hidden");
+      break;
+    case "report":
+      if (reportArea) reportArea.classList.remove("hidden");
+      break;
+    default:
+      console.error(`Unknown view name: ${viewName}`);
+      // Show welcome screen as a fallback
+      if (welcomeScreenDiv) welcomeScreenDiv.classList.remove("hidden");
+      break;
+  }
+}
+
+// --- Initialization (e.g., theme) ---
+document.addEventListener("DOMContentLoaded", () => {
+  applySavedTheme(); // Apply theme as soon as DOM is ready
+
+  // Ensure initial state for calculator display
+  if (calculatorDisplay) calculatorDisplay.value = "0";
 });
+
+console.log("uiController.js loaded");
+
+// Helper to create a div if it doesn't exist (Needed by renderQuestionUI)
+function createDiv(id) {
+  let div = document.getElementById(id);
+  if (!div) {
+    div = document.createElement("div");
+    div.id = id;
+    // Note: This function only creates the div,
+    // renderQuestionUI is responsible for adding it to the DOM if needed.
+  }
+  return div;
+}

@@ -1,895 +1,951 @@
 :root {
-    --background-color: #f4f4f4;
-    --text-color: #333;
-    --container-bg-color: #fff;
-    --primary-color: #003366; /* Dark blue/navy */
-    --primary-color-darker: #002244;
-    --secondary-bg-color: #e9e9e9;
-    --border-color: #ccc;
-    --button-bg-color: #f9f9f9;
-    --button-text-color: #333;
-    --button-border-color: #ccc;
-    --button-hover-bg-color: #e9e9e9;
-    --link-color: #003366;
-    --selection-bg-color: yellow;
-    --selection-text-color: #333; /* Default text color for light selection */
+  --background-color: #f4f4f4;
+  --text-color: #333;
+  --container-bg-color: #fff;
+  --primary-color: #003366; /* Dark blue/navy */
+  --primary-color-darker: #002244;
+  --secondary-bg-color: #e9e9e9;
+  --border-color: #ccc;
+  --button-bg-color: #f9f9f9;
+  --button-text-color: #333;
+  --button-border-color: #ccc;
+  --button-hover-bg-color: #e9e9e9;
+  --link-color: #003366;
+  --selection-bg-color: yellow;
+  --selection-text-color: #333; /* Default text color for light selection */
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 /* --- Light Mode Styles (Default) --- */
 body {
-    font-family: sans-serif;
-    margin: 0; /* Remove default margin */
-    padding: 0; /* Remove default padding */
-    background-color: var(--background-color);
-    color: var(--text-color);
-    display: flex;
-    justify-content: center;
-    align-items: stretch; /* Stretch .app-container vertically */
-    min-height: 100vh;
+  font-family: sans-serif;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: stretch; /* Stretch .app-container vertically */
+  min-height: 100vh;
 }
 
-.app-container { 
-    width: 100%; 
-    max-width: none; 
-    background-color: var(--container-bg-color);
-    border: none; /* Remove border if it interferes with 100% height */
-    box-shadow: none; /* Remove shadow if it interferes */
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Explicitly set to viewport height */
+.app-container {
+  width: 100%;
+  max-width: none;
+  background-color: var(--container-bg-color);
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden; /* Prevent app container from scrolling */
+  min-height: 0; /* NEW: Allow flex items to shrink */
 }
 
 header {
-    background-color: #003366; /* Dark blue/navy color */
-    color: white;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    border-bottom: 1px solid #ddd;
-    flex-wrap: wrap; /* Allow header items to wrap */
+  background-color: #003366; /* Dark blue/navy color */
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9em;
+  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap; /* Allow header items to wrap */
 }
 
 .exam-info {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .exam-info span {
-    margin-right: 15px;
-    margin-bottom: 5px; /* Add margin for wrapping */
+  margin-right: 15px;
+  margin-bottom: 5px; /* Add margin for wrapping */
 }
 
 .question-controls {
-    display: flex;
-    align-items: center;
-     margin-bottom: 5px; /* Add margin for wrapping */
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px; /* Add margin for wrapping */
 }
 
 #mark-question {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
 .main-wrapper {
-    display: flex; /* Arrange children (main, lab panel) side-by-side */
-    flex-grow: 1; /* Allow this wrapper to fill vertical space in app-container */
-    overflow: hidden; /* Prevent content overflow issues */
-    position: relative; /* Context for absolute positioning of panel if needed */
+  display: flex; /* Arrange children (main, lab panel) side-by-side */
+  flex: 1; /* Important: use flex shorthand like original to grow and fill space */
+  overflow: hidden; /* CRITICAL: Hide overflow at wrapper level like original */
+  position: relative;
+  min-height: 0; /* NEW: Allow the flex item to shrink below its content size */
+  max-height: calc(
+    100vh - 130px
+  ); /* NEW: Set explicit max height to match main element */
 }
 
 main {
-    padding: 20px;
-    flex-grow: 1; /* Allow main area to fill space within main-wrapper */
-    display: flex; /* Make main a flex container */
-    flex-direction: column; /* Stack children vertically */
-    align-items: flex-start; /* Align children to the left */
-    transition: width 0.3s ease;
-    overflow-y: auto; /* Keep scrolling for main content */
+  padding: 20px;
+  width: 100%; /* Take full width by default */
+  height: 100%; /* Ensure height is constrained */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: width 0.3s ease;
+  overflow-y: auto; /* Allow question content to scroll independently */
+  flex-shrink: 1; /* NEW: Allow the element to shrink if needed */
+  min-height: 0; /* NEW: Allow the flex item to shrink below its content size */
+  max-height: calc(
+    100vh - 130px
+  ); /* NEW: Set explicit max height to prevent pushing footer */
 }
 
 #options-list {
-    list-style: none;
-    padding: 0; /* Remove default ul/ol padding */
-    margin: 0; /* Remove default ul/ol margin */
-    margin-bottom: 0; /* Reset any potential list margin */
-    width: 100%; /* Make list span full width */
+  list-style: none;
+  padding: 0; /* Remove default ul/ol padding */
+  margin: 0; /* Remove default ul/ol margin */
+  margin-bottom: 0; /* Reset any potential list margin */
+  width: 100%; /* Make list span full width */
 }
 
 #options-list.multi-column {
-     column-count: 2; /* Arrange options in two columns */
-     column-gap: 20px; /* Space between columns */
+  column-count: 2; /* Arrange options in two columns */
+  column-gap: 20px; /* Space between columns */
 }
 
 .option {
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #f9f9f9;
-    transition: background-color 0.2s ease;
-    display: flex;
-    align-items: flex-start; /* Align option text to the top */
-    width: 100%; /* Make option span full width */
-    box-sizing: border-box; /* Include padding in width calculation */
-    break-inside: avoid-column; /* Prevent options breaking across columns */
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: flex-start; /* Align option text to the top */
+  width: 100%; /* Make option span full width */
+  box-sizing: border-box; /* Include padding in width calculation */
+  break-inside: avoid-column; /* Prevent options breaking across columns */
 }
 
 .option:last-child {
-    margin-bottom: 50px; /* Add extra space after the last option */
+  margin-bottom: 50px; /* Add extra space after the last option */
 }
 
 .option:hover {
-    background-color: #e9e9e9;
+  background-color: #e9e9e9;
 }
 
 .option.selected {
-    background-color: #cce0ff; /* Light blue for selected */
-    border-color: #99c2ff;
+  background-color: #cce0ff; /* Light blue for selected */
+  border-color: #99c2ff;
 }
 
-.option.crossed-out .option-text {
-    text-decoration: line-through;
-    color: #888; /* Gray out text */
+/* Rule for highlighting */
+.highlight {
+  background-color: yellow;
+  color: black; /* Ensure text is readable */
+  cursor: pointer; /* Indicate it's clickable */
 }
 
- /* Simple highlighting style (visual only) */
+/* Strikethrough rule targeting the label */
+.option.crossed-out label {
+  text-decoration: line-through;
+  color: #888;
+}
+
+/* --- Add Highlight Rules Below --- */
+.highlighted-text {
+  background-color: yellow;
+  color: black; /* Ensure text is readable */
+  cursor: pointer; /* Indicate clickability for unhighlighting */
+}
+/* --- End Highlight Rules --- */
+
+/* Simple highlighting style (visual only) */
 ::selection {
-    background-color: var(--selection-bg-color);
+  background-color: var(--selection-bg-color);
 }
 
-::-moz-selection { /* Firefox specific */
-    background-color: var(--selection-bg-color);
+::-moz-selection {
+  /* Firefox specific */
+  background-color: var(--selection-bg-color);
 }
 
 /* Style for the radio button label (to make it click-friendly) */
 .option .option-text {
-    flex-grow: 1; /* Takes up space to be clickable */
+  flex-grow: 1; /* Takes up space to be clickable */
 }
 
 .option input[type="radio"] {
-    flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 footer {
-    background-color: var(--secondary-bg-color); /* Add background to distinguish */
-    border-top: 1px solid var(--border-color); /* Add border to distinguish */
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9em;
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  background-color: var(--secondary-bg-color);
+  border-top: 1px solid var(--border-color);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9em;
+  flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  flex-shrink: 0; /* NEW: Prevent the footer from shrinking */
+  position: relative; /* NEW: Enable z-index to work */
+  z-index: 5; /* NEW: Ensure footer appears above other content */
 }
 
 footer button {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    border: 1px solid var(--button-border-color);
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    margin: 5px; /* Add some space between buttons */
-    transition: background-color 0.2s ease;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: 1px solid var(--button-border-color);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin: 5px; /* Add some space between buttons */
+  transition: background-color 0.2s ease;
 }
 
 footer button:hover {
-    background-color: var(--button-hover-bg-color);
+  background-color: var(--button-hover-bg-color);
 }
 
 .footer-link {
-    margin: 5px; /* Add space around the link */
-    color: var(--link-color); /* Use CSS variable */
-     flex-grow: 1; /* Allow link to take up space */
-     text-align: center; /* Center the link */
-     min-width: 150px; /* Prevent link from collapsing too much */
+  margin: 5px; /* Add space around the link */
+  color: var(--link-color); /* Use CSS variable */
+  flex-grow: 1; /* Allow link to take up space */
+  text-align: center; /* Center the link */
+  min-width: 150px; /* Prevent link from collapsing too much */
 }
 
- #dark-mode-toggle {
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    border: 1px solid var(--button-border-color);
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    margin: 5px;
-     font-size: 0.9em; /* Match header/footer text size */
-    transition: background-color 0.2s ease;
+#dark-mode-toggle {
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: 1px solid var(--button-border-color);
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  margin: 5px;
+  font-size: 0.9em; /* Match header/footer text size */
+  transition: background-color 0.2s ease;
 }
 
 #dark-mode-toggle:hover {
-    background-color: var(--button-hover-bg-color);
+  background-color: var(--button-hover-bg-color);
 }
-
 
 /* Report styles */
 #report-container {
-    padding: 20px;
-    max-height: 95vh; /* Limit height of report for scrolling */
-    margin-bottom: 20px;
+  padding: 20px;
+  max-height: 95vh; /* Limit height of report for scrolling */
+  margin-bottom: 20px;
 }
 
 #report-container h2 {
-    text-align: center;
-    color: #003366;
-    margin-bottom: 20px;
+  text-align: center;
+  color: #003366;
+  margin-bottom: 20px;
 }
 
 #report-container h3 {
-     text-align: center;
-     color: #006633; /* Dark green for score */
-     margin-top: 0;
-     margin-bottom: 20px;
+  text-align: center;
+  color: #006633; /* Dark green for score */
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
-
 .report-question {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #eee; /* Add border to separate questions in report */
-    border-radius: 5px;
-    background-color: #fdfdfd; /* Slightly different background */
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #eee; /* Add border to separate questions in report */
+  border-radius: 5px;
+  background-color: #fdfdfd; /* Slightly different background */
 }
 
 .report-question-text {
-    font-weight: bold;
-    margin-bottom: 10px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
- .report-user-answer, .report-correct-answer {
-     margin-top: 5px;
-     padding-left: 10px; /* Indent answers */
- }
+.report-user-answer,
+.report-correct-answer {
+  margin-top: 5px;
+  padding-left: 10px; /* Indent answers */
+}
 
 .report-user-answer {
-    font-style: italic;
+  font-style: italic;
 }
 
 .report-correct-answer {
-    font-weight: bold;
-    color: green;
+  font-weight: bold;
+  color: green;
 }
 
 .report-explanation {
-    margin-top: 15px; /* More space above explanation */
-    border-left: 4px solid #003366;
-    padding-left: 15px; /* More padding */
-    background-color: #eef;
-    white-space: pre-wrap; /* Preserve line breaks in explanation */
-    word-wrap: break-word; /* Wrap long words */
+  margin-top: 15px; /* More space above explanation */
+  border-left: 4px solid #003366;
+  padding-left: 15px; /* More padding */
+  background-color: #eef;
+  white-space: pre-wrap; /* Preserve line breaks in explanation */
+  word-wrap: break-word; /* Wrap long words */
 }
 
 .report-explanation strong {
-    color: #003366;
+  color: #003366;
 }
 
 .incorrect-answer {
-    color: red;
+  color: red;
 }
 
 .correct-answer {
-    color: green;
+  color: green;
 }
 
-
-footer button:disabled, #dark-mode-toggle:disabled, #mark-question:disabled, label[for="mark-question"] {
-    opacity: 0.5;
-    cursor: not-allowed;
+footer button:disabled,
+#dark-mode-toggle:disabled,
+#mark-question:disabled,
+label[for="mark-question"] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-
 
 @media (max-width: 600px) {
-    header, footer {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .exam-info span, .question-controls, .footer-link, footer button {
-        margin-bottom: 5px;
-        margin-right: 0;
-    }
-     .footer-link {
-         text-align: left;
-     }
+  header,
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .exam-info span,
+  .question-controls,
+  .footer-link,
+  footer button {
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+  .footer-link {
+    text-align: left;
+  }
 }
 
 /* --- Dark Mode Styles --- */
 body.dark-mode {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
 
-    /* Override CSS variables for dark mode */
-    --background-color: #1a1a1a;
-    --text-color: #e0e0e0;
-    --container-bg-color: #2b2b2b;
-    --primary-color: #405d80; /* Darker blue for dark mode */
-    --primary-color-darker: #4a6e9a;
-    --secondary-bg-color: #121212; /* Even darker */
-    --border-color: #444;
-    --button-bg-color: #4a4a4a;
-    --button-text-color: #e0e0e0;
-    --button-border-color: #666;
-    --button-hover-bg-color: #5a5a5a;
-    --link-color: #99c2ff; /* Lighter blue for links */
-    --selection-bg-color: #6080a0; /* Blue selection */
-    --selection-text-color: white;
+  /* Override CSS variables for dark mode */
+  --background-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --container-bg-color: #2b2b2b;
+  --primary-color: #405d80; /* Darker blue for dark mode */
+  --primary-color-darker: #4a6e9a;
+  --secondary-bg-color: #121212; /* Even darker */
+  --border-color: #444;
+  --button-bg-color: #4a4a4a;
+  --button-text-color: #e0e0e0;
+  --button-border-color: #666;
+  --button-hover-bg-color: #5a5a5a;
+  --link-color: #99c2ff; /* Lighter blue for links */
+  --selection-bg-color: #6080a0; /* Blue selection */
+  --selection-text-color: white;
 }
 
 body.dark-mode .app-container,
 body.dark-mode #report-container {
-    background-color: var(--container-bg-color);
-    border-color: #444;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  background-color: var(--container-bg-color);
+  border-color: #444;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-mode header,
 body.dark-mode footer {
-    background-color: #121212; /* Even darker */
-    color: #f0f0f0;
-    border-color: #444;
+  background-color: #121212; /* Even darker */
+  color: #f0f0f0;
+  border-color: #444;
 }
 
 body.dark-mode .exam-info span,
 body.dark-mode .footer-link {
-    color: #f0f0f0;
+  color: #f0f0f0;
 }
 
 body.dark-mode .question-text {
-     color: #f0f0f0;
+  color: #f0f0f0;
 }
 
 body.dark-mode .option {
-    background-color: #3a3a3a;
-    border-color: #555;
-    color: #cccccc;
+  background-color: #3a3a3a;
+  border-color: #555;
+  color: #cccccc;
 }
 
 body.dark-mode .option:hover {
-    background-color: #4a4a4a;
+  background-color: #4a4a4a;
 }
 
 body.dark-mode .option.selected {
-    background-color: #405d80; /* Darker blue selection */
-    border-color: #6080a0;
-    color: #f0f0f0; /* White text on dark blue */
+  background-color: #3a5b8a;
+  border-color: #5a7ba9;
 }
 
-body.dark-mode .option.crossed-out .option-text {
-    color: #666; /* Gray out text */
+/* Dark mode Strikethrough rule targeting the label */
+body.dark-mode .option.crossed-out label {
+  text-decoration: line-through;
+  color: #666;
 }
 
- body.dark-mode ::selection {
-     background-color: var(--selection-bg-color);
-     color: var(--selection-text-color);
- }
+body.dark-mode ::selection {
+  background-color: var(--selection-bg-color);
+  color: var(--selection-text-color);
+}
 
- body.dark-mode ::-moz-selection { /* Firefox specific */
-     background-color: var(--selection-bg-color);
-     color: var(--selection-text-color);
- }
-
+body.dark-mode ::-moz-selection {
+  /* Firefox specific */
+  background-color: var(--selection-bg-color);
+  color: var(--selection-text-color);
+}
 
 body.dark-mode footer button,
- body.dark-mode #dark-mode-toggle {
-    background-color: #4a4a4a;
-    color: #e0e0e0;
-    border: 1px solid #666;
+body.dark-mode #dark-mode-toggle {
+  background-color: #4a4a4a;
+  color: #e0e0e0;
+  border: 1px solid #666;
 }
 
 body.dark-mode footer button:hover,
- body.dark-mode #dark-mode-toggle:hover {
-    background-color: #5a5a5a;
+body.dark-mode #dark-mode-toggle:hover {
+  background-color: #5a5a5a;
 }
 
 /* Report specific dark mode styles */
 body.dark-mode #report-container h2 {
-    color: #6080a0; /* Lighter blue for headings */
+  color: #6080a0; /* Lighter blue for headings */
 }
 
 body.dark-mode #report-container h3 {
-     color: #66cc66; /* A green that works on dark background */
+  color: #66cc66; /* A green that works on dark background */
 }
 
 body.dark-mode .report-question {
-    background-color: #333;
-    border-color: #555;
+  background-color: #333;
+  border-color: #555;
 }
 
- body.dark-mode .report-correct-answer {
-    color: rgb(50, 205, 50); /* Bright green for correct answers */
+body.dark-mode .report-correct-answer {
+  color: rgb(50, 205, 50); /* Bright green for correct answers */
 }
-        
+
 /* Report Buttons at Top Styling */
 .report-buttons {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .report-buttons button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--primary-color);
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
 }
 
 .report-buttons button:hover {
-    background-color: var(--primary-color-darker);
+  background-color: var(--primary-color-darker);
 }
 
 /* Dark mode button styles */
 body.dark-mode .report-buttons button {
-    background-color: #405d80;
-    color: #f0f0f0;
+  background-color: #405d80;
+  color: #f0f0f0;
 }
 
 body.dark-mode .report-buttons button:hover {
-    background-color: #4a6e9a;
+  background-color: #4a6e9a;
 }
 
- body.dark-mode .report-user-answer.incorrect-answer {
-     color: #ff6666; /* A red that works on dark background */
- }
+body.dark-mode .report-user-answer.incorrect-answer {
+  color: #ff6666; /* A red that works on dark background */
+}
 
 body.dark-mode .report-correct-answer {
-    color: #66cc66; /* A green that works on dark background */
+  color: #66cc66; /* A green that works on dark background */
 }
 
 body.dark-mode .report-explanation {
-    background-color: #3a4a5a; /* Darker blue background for explanation */
-    border-left-color: #6080a0; /* Accent border */
-    color: #cccccc; /* Light gray text */
+  background-color: #3a4a5a; /* Darker blue background for explanation */
+  border-left-color: #6080a0; /* Accent border */
+  color: #cccccc; /* Light gray text */
 }
 
 body.dark-mode .report-explanation strong {
-    color: #f0f0f0; /* Lighter color for bold text */
+  color: #f0f0f0; /* Lighter color for bold text */
 }
 
 body.dark-mode #restart-button {
-     background-color: #008040; /* Green button for dark mode */
-     color: white;
+  background-color: #008040; /* Green button for dark mode */
+  color: white;
 }
 
 body.dark-mode #restart-button:hover {
-     background-color: #006633;
+  background-color: #006633;
 }
 
-
 @media (max-width: 600px) {
-    header, footer {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .exam-info span, .question-controls, .footer-link, footer button {
-        margin-bottom: 5px;
-        margin-right: 0;
-    }
-     .footer-link {
-         text-align: left;
-     }
+  header,
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .exam-info span,
+  .question-controls,
+  .footer-link,
+  footer button {
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+  .footer-link {
+    text-align: left;
+  }
 }
 
 /* New Split Panel Styles */
-.main-wrapper {
-    display: flex;
-    flex: 1; /* Explicitly define flex behavior (grow, shrink, basis) */
-    overflow: hidden; /* Prevent content spilling out */
-    position: relative; /* Establish positioning context if needed */
-}
-
-.main-wrapper main {
-    width: 100%;
-    height: 100%; /* Re-apply: Constrain height within wrapper */
-    transition: width 0.3s ease;
-    overflow-y: auto; /* Keep scrolling for main content */
-}
-
 #lab-values-panel {
-    width: 0;
-    height: 100%; /* Re-apply: Constrain height within wrapper */
-    overflow: hidden; /* Hide overflow when panel is closed/width is 0 */
-    transition: width 0.3s ease;
-    border-left: 1px solid #ccc;
-    background-color: #f8f8f8;
-    display: flex; /* Use flex for panel content */
-    flex-direction: column;
+  width: 0;
+  height: 100%; /* Match parent height exactly */
+  overflow: hidden; /* Hide overflow when panel is closed */
+  transition: width 0.3s ease;
+  border-left: 1px solid #ccc;
+  background-color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* NEW: Allow the flex item to shrink below its content size */
 }
 
 .main-wrapper.lab-panel-active main {
-    width: 60%; /* Adjust as needed */
+  width: 60%; /* Adjust as needed */
 }
 
 .main-wrapper.lab-panel-active #lab-values-panel {
-    width: 40%; /* Adjust as needed */
-    overflow-y: auto; /* Allow panel content to scroll ONLY when active */
+  width: 40%; /* Adjust as needed */
+  overflow-y: auto; /* Allow panel content to scroll ONLY when active */
+  max-height: calc(
+    100vh - 130px
+  ); /* NEW: Limit height to viewport minus header/footer */
 }
 
-.panel-content { /* Renamed from modal-content */
-    flex-grow: 1; /* Allow content to take available space */
-    display: flex;
-    flex-direction: column;
-    position: relative; /* For close button positioning */
-    padding: 20px; /* Apply padding here */
+.panel-content {
+  /* Renamed from modal-content */
+  flex-grow: 1; /* Allow content to take available space */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* For close button positioning */
+  padding: 20px; /* Apply padding here */
 }
 
-#close-lab-panel { /* Renamed from close-button */
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #888;
-    cursor: pointer;
-    line-height: 1;
-    background: none;
-    border: none;
-    padding: 0;
+#close-lab-panel {
+  /* Renamed from close-button */
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 #close-lab-panel:hover {
-    color: #333;
+  color: #333;
 }
 
 .tab-container {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-buttons button {
-    background-color: #f1f1f1;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 10px 15px;
-    transition: 0.3s;
-    border-radius: 5px 5px 0 0; /* Rounded top corners */
-    margin-right: 2px;
+  background-color: #f1f1f1;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 15px;
+  transition: 0.3s;
+  border-radius: 5px 5px 0 0; /* Rounded top corners */
+  margin-right: 2px;
 }
 
 .tab-buttons button:hover {
-    background-color: #ddd;
+  background-color: #ddd;
 }
 
 .tab-buttons button.active {
-    background-color: #ccc;
+  background-color: #ccc;
 }
 
 .tab-content {
-    display: none; /* Hide content by default */
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-top: none;
-    border-radius: 0 0 5px 5px; /* Rounded bottom corners */
+  display: none; /* Hide content by default */
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 5px 5px; /* Rounded bottom corners */
 }
 
 .tab-content.active {
-    display: block; /* Show active tab content */
+  display: block; /* Show active tab content */
 }
 
 /* Lab Values Table Style */
 .lab-values-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
 }
 
-.lab-values-table th, .lab-values-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+.lab-values-table th,
+.lab-values-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
 
 .lab-values-table th {
-    background-color: #f2f2f2;
+  background-color: #f2f2f2;
 }
 
 .panel-content h2 {
-    margin-top: 0; /* Remove default top margin if any */
-    margin-bottom: 15px; /* Space below the title */
+  margin-top: 0; /* Remove default top margin if any */
+  margin-bottom: 15px; /* Space below the title */
 }
 
 /* Dark mode adjustments for panel */
 body.dark-mode .main-wrapper #lab-values-panel {
-    background-color: #444;
-    border-color: #666;
+  background-color: #444;
+  border-color: #666;
 }
 body.dark-mode .panel-content {
-    background-color: #505050;
+  background-color: #505050;
 }
 body.dark-mode .tab-buttons button {
-    background-color: #555;
-    color: #f0f0f0;
-    border-color: #777;
+  background-color: #555;
+  color: #f0f0f0;
+  border-color: #777;
 }
 body.dark-mode .tab-buttons button:hover {
-    background-color: #666;
+  background-color: #666;
 }
 body.dark-mode .tab-buttons button.active {
-    background-color: #777;
+  background-color: #777;
 }
 body.dark-mode .tab-content {
-    border-color: #666;
+  border-color: #666;
 }
 body.dark-mode .lab-values-table th,
 body.dark-mode .lab-values-table td {
-    border-color: #777;
+  border-color: #777;
 }
 body.dark-mode .lab-values-table th {
-    background-color: #606060;
+  background-color: #606060;
 }
 
 .question-text {
-    margin-bottom: 15px;
-    font-size: 1.1em; /* Restore font size */
-    line-height: 1.6; /* Restore line spacing */
+  margin-bottom: 15px;
+  font-size: 1.1em; /* Restore font size */
+  line-height: 1.6; /* Restore line spacing */
 }
 
 .question-image {
-    text-align: center; /* Restore image centering */
-    margin-bottom: 15px; /* Restore space below image */
+  text-align: center; /* Restore image centering */
+  margin-bottom: 15px; /* Restore space below image */
 }
 
 .question-image img {
-    max-width: 100%; /* Restore image responsiveness */
-    height: auto;
+  max-width: 100%; /* Restore image responsiveness */
+  height: auto;
 }
 /* --- Review Modal Styles --- */
-.modal { /* General modal styles */
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
-    z-index: 1050; /* Ensure it's above other elements */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.modal {
+  /* General modal styles */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+  z-index: 1050; /* Ensure it's above other elements */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal.hidden {
-    display: none;
+  display: none;
 }
 
-.modal-content { /* General modal content box */
-    background-color: #fff; /* Light mode background */
-    padding: 25px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
+.modal-content {
+  /* General modal content box */
+  background-color: #fff; /* Light mode background */
+  padding: 25px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.review-content { /* Specific styles for review modal */
-    width: 90%;
-    max-width: 550px; /* Adjust width as needed */
+.review-content {
+  /* Specific styles for review modal */
+  width: 90%;
+  max-width: 550px; /* Adjust width as needed */
 }
 
 .review-content h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 1.4em;
-    color: #333; /* Light mode text */
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1.4em;
+  color: #333; /* Light mode text */
 }
 
 .review-filter {
-    margin-bottom: 20px;
-    text-align: center;
-    border-bottom: 1px solid #eee; /* Light mode border */
-    padding-bottom: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+  border-bottom: 1px solid #eee; /* Light mode border */
+  padding-bottom: 15px;
 }
 
 .review-filter label {
-    margin: 0 12px;
-    cursor: pointer;
-    color: #555; /* Light mode text */
+  margin: 0 12px;
+  cursor: pointer;
+  color: #555; /* Light mode text */
 }
 .review-filter input[type="radio"] {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
-
 #review-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    overflow-y: auto; /* Allow scrolling */
-    flex-grow: 1; /* Take remaining vertical space */
-    border: 1px solid #eee; /* Light mode border */
-    border-radius: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto; /* Allow scrolling */
+  flex-grow: 1; /* Take remaining vertical space */
+  border: 1px solid #eee; /* Light mode border */
+  border-radius: 4px;
 }
 
 #review-list li {
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee; /* Light mode border */
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background-color 0.2s ease;
-    color: #333; /* Light mode text */
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee; /* Light mode border */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
+  color: #333; /* Light mode text */
 }
 
 #review-list li:hover {
-    background-color: #f5f5f5; /* Light hover */
+  background-color: #f5f5f5; /* Light hover */
 }
 
 #review-list li:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .status {
-    display: inline-block;
-    padding: 4px 9px;
-    border-radius: 12px; /* Pill shape */
-    font-size: 0.8em;
-    font-weight: 500;
-    margin-left: 8px;
-    border: 1px solid transparent;
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 12px; /* Pill shape */
+  font-size: 0.8em;
+  font-weight: 500;
+  margin-left: 8px;
+  border: 1px solid transparent;
 }
 
 .status-answered {
-    background-color: #e7f4e8;
-    color: #28a745; /* Green */
-    border-color: #c3e6cb;
+  background-color: #e7f4e8;
+  color: #28a745; /* Green */
+  border-color: #c3e6cb;
 }
 
 .status-unanswered {
-    background-color: #f8d7da;
-    color: #dc3545; /* Red */
-    border-color: #f5c6cb;
+  background-color: #f8d7da;
+  color: #dc3545; /* Red */
+  border-color: #f5c6cb;
 }
 
 .status-marked {
-    background-color: #fff3cd;
-    color: #ffc107; /* Yellow/Orange */
-    border-color: #ffeeba;
-    margin-left: 5px;
+  background-color: #fff3cd;
+  color: #ffc107; /* Yellow/Orange */
+  border-color: #ffeeba;
+  margin-left: 5px;
 }
 
 /* Dark mode for Review Modal */
 body.dark-mode .modal-content {
-    background-color: #2b2b2b; /* Dark background */
-    border-color: #555;
+  background-color: #2b2b2b; /* Dark background */
+  border-color: #555;
 }
 body.dark-mode .review-content h2,
 body.dark-mode .review-filter label,
 body.dark-mode #review-list li {
-    color: #ddd; /* Dark mode text */
+  color: #ddd; /* Dark mode text */
 }
 body.dark-mode #review-list {
-    border-color: #444;
+  border-color: #444;
 }
 body.dark-mode #review-list li {
-    border-bottom-color: #444;
+  border-bottom-color: #444;
 }
 body.dark-mode #review-list li:hover {
-    background-color: #3a3a3a; /* Dark hover */
+  background-color: #3a3a3a; /* Dark hover */
 }
 body.dark-mode .review-filter {
-    border-bottom-color: #444;
+  border-bottom-color: #444;
 }
 body.dark-mode .status-answered {
-    background-color: #2a573b;
-    color: #9fddb3;
-    border-color: #3a704c;
+  background-color: #2a573b;
+  color: #9fddb3;
+  border-color: #3a704c;
 }
 body.dark-mode .status-unanswered {
-    background-color: #5a2a2f;
-    color: #f1b0b7;
-    border-color: #7d3b41;
+  background-color: #5a2a2f;
+  color: #f1b0b7;
+  border-color: #7d3b41;
 }
 body.dark-mode .status-marked {
-    background-color: #665120;
-    color: #ffe177;
-    border-color: #8a702b;
+  background-color: #665120;
+  color: #ffe177;
+  border-color: #8a702b;
 }
 /* Close button style */
 #close-review-modal {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    font-weight: bold;
-    color: #aaa; /* Light mode */
-    cursor: pointer;
-    line-height: 1;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #aaa; /* Light mode */
+  cursor: pointer;
+  line-height: 1;
 }
 #close-review-modal:hover {
-    color: #333; /* Light mode */
+  color: #333; /* Light mode */
 }
 body.dark-mode #close-review-modal {
-    color: #888; /* Dark mode */
+  color: #888; /* Dark mode */
 }
 body.dark-mode #close-review-modal:hover {
-    color: #ddd; /* Dark mode */
+  color: #ddd; /* Dark mode */
 }
 
 /* Basic styling for start screen */
 #start-screen {
-    position: fixed; /* Cover the whole page */
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 100; /* Ensure it's on top */
-    padding: 20px;
+  position: fixed; /* Cover the whole page */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 100; /* Ensure it's on top */
+  padding: 20px;
 }
 #start-screen h1 {
-    margin-bottom: 30px;
-    font-size: 2.5em;
+  margin-bottom: 30px;
+  font-size: 2.5em;
 }
 #start-button {
-    padding: 15px 30px;
-    font-size: 1.2em;
-    cursor: pointer;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
 }
 #start-button:hover {
-     background-color: var(--primary-color-darker);
+  background-color: var(--primary-color-darker);
 }
 
 /* Print-specific styles */
 @media print {
-    /* Hide everything by default */
-    body * {
-        visibility: hidden;
-    }
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
 
-    /* Show only the report container and its contents */
-    #report-container, #report-container * {
-        visibility: visible;
-    }
+  /* Show only the report container and its contents */
+  #report-container,
+  #report-container * {
+    visibility: visible;
+  }
 
-    /* Position the report container at the top of the page */
-    #report-container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 10px; /* Add some padding */
-        border: none; /* Remove borders if any */
-    }
+  /* Position the report container at the top of the page */
+  #report-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 10px; /* Add some padding */
+    border: none; /* Remove borders if any */
+  }
 
-    /* Hide the action buttons within the report container */
-    #report-actions, #download-report-pdf, #restart-button {
-        display: none !important; /* Ensure buttons are hidden */
-    }
+  /* Hide the action buttons within the report container */
+  #report-actions,
+  #download-report-pdf,
+  #restart-button {
+    display: none !important; /* Ensure buttons are hidden */
+  }
 
-    /* Try to prevent questions from breaking across pages */
-    .report-question {
-        page-break-inside: avoid;
-        margin-bottom: 15px; /* Add space between questions */
-    }
-    
-    /* Ensure images don't overflow */
-    .question-image img {
-         max-width: 100%;
-         height: auto;
-    }
+  /* Try to prevent questions from breaking across pages */
+  .report-question {
+    page-break-inside: avoid;
+    margin-bottom: 15px; /* Add space between questions */
+  }
+
+  /* Ensure images don't overflow */
+  .question-image img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 .strikethrough-answer {
-    text-decoration: line-through;
-    color: grey;
-    cursor: pointer; /* Indicate it's clickable */
+  text-decoration: line-through;
+  color: grey;
+  cursor: pointer; /* Indicate it's clickable */
 }
+
+/* Dark mode Highlighting style */
+body.dark-mode .highlight {
+  background-color: #ffff00; /* Brighter yellow maybe? */
+  color: #111; /* Ensure dark text */
+}
+
+/* --- Add Dark Mode Highlight Rules Below --- */
+body.dark-mode .highlighted-text {
+  background-color: #777; /* Muted gray for dark mode highlight (from original) */
+  color: #f0f0f0; /* Ensure text is readable (from original) */
+}
+/* --- End Dark Mode Highlight Rules --- */
