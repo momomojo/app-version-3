@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Clinical Neurology Self-Assessment</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="welcome-screen">
+        <h1>Welcome to the Exam</h1>
+        <label for="exam-select">Choose an exam:</label>
+        <select name="exams" id="exam-select">
+            <option value="">--Please choose an exam--</option>
+            <!-- Options will be populated dynamically -->
+        </select>
+        <button id="start-exam-btn" disabled>Start Exam</button>
+        <p id="loading-message"></p> <!-- To show loading/error messages -->
+    </div>
+    <div id="app-container" style="display: none;"> <!-- Initially hidden -->
+        <header class="hidden">
+            <div class="exam-info">
+                <span id="exam-section-item">Exam Section : Item 1 of 150</span>
+                <span id="exam-title">National Board of Medical Examiners Clinical Neurology Self-Assessment</span>
+                <span id="time-remaining">Time Remaining: 3 hr 45 min 00 sec</span>
+            </div>
+            <div class="question-controls">
+                 <button id="dark-mode-toggle">Dark Mode</button> <!-- Dark Mode Toggle -->
+                <input type="checkbox" id="mark-question">
+                <label for="mark-question">Mark</label>
+            </div>
+        </header>
+
+        <div class="main-wrapper hidden">
+            <main id="question-area">
+                <div id="question-text">Loading question...</div>
+                <ul id="options-list"></ul>
+                <div id="feedback" class="hidden"></div>
+                <div id="explanation" class="hidden"></div>
+            </main>
+            <div id="lab-values-panel">
+                <div class="panel-content">
+                    <button class="close-button" id="close-lab-panel">×</button>
+                    <h2>Laboratory Values</h2>
+                    <div class="tab-container">
+                        <div class="tab-buttons" id="lab-tab-buttons"></div>
+                        <div class="tab-content-area" id="lab-tab-content-area"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="hidden">
+            <button id="prev-button" disabled>Previous</button>
+            <button id="next-button" disabled>Next</button>
+            <span class="footer-link">https://t.me/USMLENBME2CK</span>
+            <button id="lab-values-button" disabled>Lab Values</button>
+            <button id="calculator-button" disabled>Calculator</button>
+            <button id="review-button" disabled>Review</button>
+            <button id="help-button" disabled>Help</button>
+            <button id="pause-button" disabled>Pause</button>
+        </footer>
+    </div>
+
+    <div id="report-container" class="hidden">
+        <h2>Exam Report</h2>
+        <div class="report-buttons">
+            <button id="download-report-pdf">Download Report (PDF)</button>
+            <button id="restart-button">Restart Exam</button>
+        </div>
+        <div id="report-content">
+            <!-- Report will be loaded here by JavaScript -->
+        </div>
+    </div>
+
+
+<!-- Review Modal -->
+<div id="review-modal" class="modal hidden">
+    <div class="modal-content review-content">
+        <span class="close-button" id="close-review-modal">&times;</span>
+        <h2>Review Questions</h2>
+        <!-- Filter Radio Buttons -->
+        <div class="review-filter">
+            <label><input type="radio" name="reviewFilter" value="all" checked> All</label>
+            <label><input type="radio" name="reviewFilter" value="answered"> Answered</label>
+            <label><input type="radio" name="reviewFilter" value="unanswered"> Unanswered</label>
+            <label><input type="radio" name="reviewFilter" value="marked"> Marked</label>
+        </div>
+        <!-- List Container -->
+        <ul id="review-list">
+            <!-- Question statuses will be populated here by JavaScript -->
+        </ul>
+    </div>
+</div>
+
+<script type="module" src="js/timer.js"></script>
+<script type="module" src="js/uiController.js"></script> <!-- Ensure this is before renderer.js -->
+<script type="module" src="js/examManager.js"></script>
+<script type="module" src="js/labValues.js"></script>
+<script type="module" src="js/reportGenerator.js"></script>
+<script type="module" src="js/renderer.js"></script>
+<script type="module" src="js/welcomeScreen.js"></script>
+ </body>
+ </html>
