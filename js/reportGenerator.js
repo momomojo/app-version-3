@@ -16,7 +16,8 @@ export function generateReport(
   reportElement,
   questions,
   userAnswers,
-  scoreData
+  scoreData,
+  markedQuestions = []
 ) {
   console.log("Report Generator: Generating report...");
   if (!reportElement) {
@@ -38,6 +39,7 @@ export function generateReport(
     const userAnswer = userAnswers[index]; // User's stored answer ('A', 'B', or '0', '1', etc.)
     const correctAnswer = question.correctAnswer; // USE CORRECT FIELD NAME from JSON
     const options = question.options;
+    const isMarked = markedQuestions[index] === true;
 
     // --- REMOVE DEBUG LOG (can be re-added if needed) ---
     /* console.log(
@@ -90,13 +92,24 @@ export function generateReport(
       isCorrect = false;
     }
 
+    // Create status indicators
+    const correctnessIndicator = isCorrect
+      ? '<span class="status-correct">✓</span>'
+      : '<span class="status-incorrect">✗</span>';
+
+    const markedIndicator = isMarked
+      ? '<span class="status-marked" title="This question was marked during the exam">Marked</span>'
+      : "";
+
     reportHtml += `
-        <div class="report-item ${isCorrect ? "correct" : "incorrect"}">
-            <h4>Question ${index + 1} ${
-      isCorrect
-        ? '<span class="status-correct">✓</span>'
-        : '<span class="status-incorrect">✗</span>'
-    }</h4>
+        <div class="report-item ${isCorrect ? "correct" : "incorrect"} ${
+      isMarked ? "marked-question" : ""
+    }">
+            <h4>
+              Question ${index + 1} 
+              ${correctnessIndicator}
+              ${markedIndicator}
+            </h4>
             <div class="report-question-text">${formatText(
               question.text || question.question
             )}</div>
@@ -150,15 +163,27 @@ export function generateReport(
     `;
   });
 
+  // Count marked questions for summary
+  const markedCount = markedQuestions.filter(Boolean).length;
+
   // Prepend the score summary
   reportHtml = `
         <div class="report-summary">
             <h3>Exam Report</h3>
-            <p>Score: ${scoreData.correctCount} out of ${
+            <p>
+              Score: ${scoreData.correctCount} out of ${
     scoreData.totalQuestions
-  } (${((scoreData.correctCount / scoreData.totalQuestions) * 100).toFixed(
-    1
-  )}%)</p>
+  } 
+              (${(
+                (scoreData.correctCount / scoreData.totalQuestions) *
+                100
+              ).toFixed(1)}%)
+              ${
+                markedCount > 0
+                  ? `<br>Questions marked during exam: ${markedCount}`
+                  : ""
+              }
+            </p>
         </div>
         <hr>
         ${reportHtml}

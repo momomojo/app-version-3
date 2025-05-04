@@ -1,3 +1,6 @@
+/* Import fonts for better typography */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 :root {
   --background-color: #f4f4f4;
   --text-color: #333;
@@ -13,6 +16,10 @@
   --link-color: #003366;
   --selection-bg-color: yellow;
   --selection-text-color: #333; /* Default text color for light selection */
+  --header-text-color: #fff;
+  --header-title-color: #fff;
+  --header-font: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --body-font: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .hidden {
@@ -20,7 +27,7 @@
 }
 /* --- Light Mode Styles (Default) --- */
 body {
-  font-family: sans-serif;
+  font-family: var(--body-font);
   margin: 0; /* Remove default margin */
   padding: 0; /* Remove default padding */
   background-color: var(--background-color);
@@ -29,6 +36,8 @@ body {
   justify-content: center;
   align-items: stretch; /* Stretch .app-container vertically */
   min-height: 100vh;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .app-container {
@@ -45,15 +54,17 @@ body {
 }
 
 header {
-  background-color: #003366; /* Dark blue/navy color */
-  color: white;
-  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: var(--header-text-color);
+  padding: 14px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9em;
-  border-bottom: 1px solid #ddd;
+  font-family: var(--header-font);
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-wrap: wrap; /* Allow header items to wrap */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .exam-info {
@@ -65,12 +76,34 @@ header {
 .exam-info span {
   margin-right: 15px;
   margin-bottom: 5px; /* Add margin for wrapping */
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+#exam-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--header-title-color);
+  margin: 0 15px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+#exam-section-item,
+#time-remaining {
+  font-size: 0.9rem;
+  opacity: 0.95;
 }
 
 .question-controls {
   display: flex;
   align-items: center;
   margin-bottom: 5px; /* Add margin for wrapping */
+  gap: 10px;
 }
 
 #mark-question {
@@ -89,7 +122,7 @@ header {
 }
 
 main {
-  padding: 20px;
+  padding: 30px; /* Increased padding */
   width: 100%; /* Take full width by default */
   height: 100%; /* Ensure height is constrained */
   display: flex;
@@ -106,10 +139,13 @@ main {
 
 #options-list {
   list-style: none;
-  padding: 0; /* Remove default ul/ol padding */
-  margin: 0; /* Remove default ul/ol margin */
-  margin-bottom: 0; /* Reset any potential list margin */
-  width: 100%; /* Make list span full width */
+  padding: 0;
+  margin: 0;
+  margin-top: 25px;
+  margin-bottom: 0;
+  width: 100%;
+  display: grid;
+  gap: 10px;
 }
 
 #options-list.multi-column {
@@ -118,31 +154,31 @@ main {
 }
 
 .option {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  margin-bottom: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
   cursor: pointer;
-  background-color: #f9f9f9;
-  transition: background-color 0.2s ease;
+  background-color: white;
+  transition: all 0.2s ease;
   display: flex;
-  align-items: flex-start; /* Align option text to the top */
-  width: 100%; /* Make option span full width */
-  box-sizing: border-box; /* Include padding in width calculation */
-  break-inside: avoid-column; /* Prevent options breaking across columns */
-}
-
-.option:last-child {
-  margin-bottom: 50px; /* Add extra space after the last option */
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  break-inside: avoid-column;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .option:hover {
-  background-color: #e9e9e9;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .option.selected {
-  background-color: #cce0ff; /* Light blue for selected */
-  border-color: #99c2ff;
+  background-color: rgba(0, 51, 102, 0.08);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(0, 51, 102, 0.2);
 }
 
 /* Rule for highlighting */
@@ -178,7 +214,8 @@ main {
 
 /* Style for the radio button label (to make it click-friendly) */
 .option .option-text {
-  flex-grow: 1; /* Takes up space to be clickable */
+  flex-grow: 1;
+  padding-left: 10px;
 }
 
 .option input[type="radio"] {
@@ -188,26 +225,28 @@ main {
 footer {
   background-color: var(--secondary-bg-color);
   border-top: 1px solid var(--border-color);
-  padding: 10px 20px;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9em;
+  font-family: var(--body-font);
+  font-size: 0.9rem;
   flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
   flex-shrink: 0; /* NEW: Prevent the footer from shrinking */
   position: relative; /* NEW: Enable z-index to work */
-  z-index: 5; /* NEW: Ensure footer appears above other content */
+  gap: 8px;
 }
 
 footer button {
+  padding: 8px 14px;
   background-color: var(--button-bg-color);
   color: var(--button-text-color);
   border: 1px solid var(--button-border-color);
-  padding: 5px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  border-radius: 3px;
-  margin: 5px; /* Add some space between buttons */
-  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: var(--body-font);
 }
 
 footer button:hover {
@@ -215,27 +254,26 @@ footer button:hover {
 }
 
 .footer-link {
-  margin: 5px; /* Add space around the link */
-  color: var(--link-color); /* Use CSS variable */
-  flex-grow: 1; /* Allow link to take up space */
-  text-align: center; /* Center the link */
-  min-width: 150px; /* Prevent link from collapsing too much */
+  color: var(--link-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 #dark-mode-toggle {
-  background-color: var(--button-bg-color);
-  color: var(--button-text-color);
-  border: 1px solid var(--button-border-color);
-  padding: 5px 10px;
+  padding: 6px 12px;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--header-text-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
   cursor: pointer;
-  border-radius: 3px;
-  margin: 5px;
-  font-size: 0.9em; /* Match header/footer text size */
-  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: var(--header-font);
 }
 
 #dark-mode-toggle:hover {
-  background-color: var(--button-hover-bg-color);
+  background-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Report styles */
@@ -335,62 +373,63 @@ label[for="mark-question"] {
 
 /* --- Dark Mode Styles --- */
 body.dark-mode {
-  background-color: #1a1a1a;
-  color: #e0e0e0;
-
-  /* Override CSS variables for dark mode */
-  --background-color: #1a1a1a;
-  --text-color: #e0e0e0;
-  --container-bg-color: #2b2b2b;
-  --primary-color: #405d80; /* Darker blue for dark mode */
-  --primary-color-darker: #4a6e9a;
-  --secondary-bg-color: #121212; /* Even darker */
+  --background-color: #121212;
+  --text-color: #f0f0f0;
+  --container-bg-color: #1e1e1e;
+  --primary-color: #1a3b60; /* Darker blue for dark mode */
+  --primary-color-darker: #102845;
+  --secondary-bg-color: #2c2c2c;
   --border-color: #444;
-  --button-bg-color: #4a4a4a;
+  --button-bg-color: #2a2a2a;
   --button-text-color: #e0e0e0;
-  --button-border-color: #666;
-  --button-hover-bg-color: #5a5a5a;
-  --link-color: #99c2ff; /* Lighter blue for links */
-  --selection-bg-color: #6080a0; /* Blue selection */
-  --selection-text-color: white;
+  --button-border-color: #444;
+  --button-hover-bg-color: #383838;
+  --link-color: #6ba0d7;
+  --selection-bg-color: #ffd700; /* Gold in dark mode */
+  --selection-text-color: #000; /* Black text on gold highlight */
+  --header-text-color: #e0e0e0;
+  --header-title-color: #f8f8f8;
 }
 
 body.dark-mode .app-container,
 body.dark-mode #report-container {
   background-color: var(--container-bg-color);
-  border-color: #444;
+  border-color: var(--border-color);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-mode header,
 body.dark-mode footer {
-  background-color: #121212; /* Even darker */
-  color: #f0f0f0;
-  border-color: #444;
+  background-color: var(--primary-color);
+  color: var(--header-text-color);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-body.dark-mode .exam-info span,
-body.dark-mode .footer-link {
-  color: #f0f0f0;
+body.dark-mode .exam-info span {
+  color: var(--header-text-color);
 }
 
 body.dark-mode .question-text {
-  color: #f0f0f0;
+  color: var(--header-text-color);
 }
 
 body.dark-mode .option {
-  background-color: #3a3a3a;
-  border-color: #555;
-  color: #cccccc;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for dark mode */
 }
 
 body.dark-mode .option:hover {
-  background-color: #4a4a4a;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 body.dark-mode .option.selected {
-  background-color: #3a5b8a;
-  border-color: #5a7ba9;
+  background-color: rgba(106, 160, 220, 0.15);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(106, 160, 220, 0.3);
 }
 
 /* Dark mode Strikethrough rule targeting the label */
@@ -660,9 +699,18 @@ body.dark-mode .lab-values-table th {
 }
 
 .question-text {
-  margin-bottom: 15px;
-  font-size: 1.1em; /* Restore font size */
-  line-height: 1.6; /* Restore line spacing */
+  margin-bottom: 25px; /* More space below question */
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 3px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+body.dark-mode .question-text {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-left-color: var(--primary-color);
 }
 
 .question-image {
@@ -676,17 +724,18 @@ body.dark-mode .lab-values-table th {
 }
 /* --- Review Modal Styles --- */
 .modal {
-  /* General modal styles */
+  display: none;
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
-  z-index: 1050; /* Ensure it's above other elements */
-  display: flex;
-  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
   align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  backdrop-filter: blur(2px);
 }
 
 .modal.hidden {
@@ -694,44 +743,69 @@ body.dark-mode .lab-values-table th {
 }
 
 .modal-content {
-  /* General modal content box */
-  background-color: #fff; /* Light mode background */
+  background-color: var(--container-bg-color);
   padding: 25px;
-  border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  position: relative;
+  max-width: 85%;
+  width: auto;
   max-height: 85vh;
-  display: flex;
-  flex-direction: column;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
 }
 
-.review-content {
-  /* Specific styles for review modal */
-  width: 90%;
-  max-width: 550px; /* Adjust width as needed */
+.close-button {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  background: none;
+  border: none;
+  z-index: 10;
 }
 
-.review-content h2 {
+.close-button:hover {
+  opacity: 1;
+}
+
+.modal-content h2 {
   margin-top: 0;
+  color: var(--primary-color);
+  font-size: 1.5rem;
   margin-bottom: 20px;
-  text-align: center;
-  font-size: 1.4em;
-  color: #333; /* Light mode text */
+  font-weight: 600;
+  padding-right: 30px;
+}
+
+/* Review Modal Enhancements */
+.review-content {
+  min-width: 500px;
+  max-width: 800px;
+  padding: 25px;
 }
 
 .review-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
   margin-bottom: 20px;
-  text-align: center;
-  border-bottom: 1px solid #eee; /* Light mode border */
-  padding-bottom: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .review-filter label {
-  margin: 0 12px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
-  color: #555; /* Light mode text */
+  margin-right: 10px;
 }
+
 .review-filter input[type="radio"] {
   margin-right: 5px;
 }
@@ -740,158 +814,672 @@ body.dark-mode .lab-values-table th {
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow-y: auto; /* Allow scrolling */
-  flex-grow: 1; /* Take remaining vertical space */
-  border: 1px solid #eee; /* Light mode border */
-  border-radius: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
 }
 
-#review-list li {
-  padding: 10px 15px;
-  border-bottom: 1px solid #eee; /* Light mode border */
+.review-list-item {
+  background-color: var(--button-bg-color);
+  padding: 12px 15px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background-color 0.2s ease;
-  color: #333; /* Light mode text */
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-color);
 }
 
-#review-list li:hover {
-  background-color: #f5f5f5; /* Light hover */
-}
-
-#review-list li:last-child {
-  border-bottom: none;
+.review-list-item:hover {
+  background-color: var(--button-hover-bg-color);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .status {
-  display: inline-block;
-  padding: 4px 9px;
-  border-radius: 12px; /* Pill shape */
-  font-size: 0.8em;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   font-weight: 500;
-  margin-left: 8px;
-  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .status-answered {
-  background-color: #e7f4e8;
-  color: #28a745; /* Green */
-  border-color: #c3e6cb;
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #28a745;
 }
 
 .status-unanswered {
-  background-color: #f8d7da;
-  color: #dc3545; /* Red */
-  border-color: #f5c6cb;
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
 }
 
 .status-marked {
-  background-color: #fff3cd;
-  color: #ffc107; /* Yellow/Orange */
-  border-color: #ffeeba;
-  margin-left: 5px;
+  background-color: rgba(255, 153, 0, 0.15);
+  color: #ff9900;
 }
 
-/* Dark mode for Review Modal */
+/* Dark Mode Modal Enhancements */
 body.dark-mode .modal-content {
-  background-color: #2b2b2b; /* Dark background */
-  border-color: #555;
-}
-body.dark-mode .review-content h2,
-body.dark-mode .review-filter label,
-body.dark-mode #review-list li {
-  color: #ddd; /* Dark mode text */
-}
-body.dark-mode #review-list {
-  border-color: #444;
-}
-body.dark-mode #review-list li {
-  border-bottom-color: #444;
-}
-body.dark-mode #review-list li:hover {
-  background-color: #3a3a3a; /* Dark hover */
-}
-body.dark-mode .review-filter {
-  border-bottom-color: #444;
-}
-body.dark-mode .status-answered {
-  background-color: #2a573b;
-  color: #9fddb3;
-  border-color: #3a704c;
-}
-body.dark-mode .status-unanswered {
-  background-color: #5a2a2f;
-  color: #f1b0b7;
-  border-color: #7d3b41;
-}
-body.dark-mode .status-marked {
-  background-color: #665120;
-  color: #ffe177;
-  border-color: #8a702b;
-}
-/* Close button style */
-#close-review-modal {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #aaa; /* Light mode */
-  cursor: pointer;
-  line-height: 1;
-}
-#close-review-modal:hover {
-  color: #333; /* Light mode */
-}
-body.dark-mode #close-review-modal {
-  color: #888; /* Dark mode */
-}
-body.dark-mode #close-review-modal:hover {
-  color: #ddd; /* Dark mode */
+  background-color: var(--container-bg-color);
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Basic styling for start screen */
-#start-screen {
-  position: fixed; /* Cover the whole page */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--background-color);
+body.dark-mode .close-button {
   color: var(--text-color);
+}
+
+body.dark-mode .modal-content h2 {
+  color: var(--header-title-color);
+}
+
+body.dark-mode .review-filter {
+  border-color: var(--border-color);
+}
+
+body.dark-mode .review-list-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .review-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .status-answered {
+  background-color: rgba(40, 167, 69, 0.25);
+  color: #5bcc76;
+}
+
+body.dark-mode .status-unanswered {
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #e76974;
+}
+
+body.dark-mode .status-marked {
+  background-color: rgba(255, 153, 0, 0.25);
+  color: #ffb84d;
+}
+
+/* Warning Modal Improvements */
+.warning-content {
+  width: 450px;
+  text-align: center;
+  padding: 30px;
+}
+
+.warning-content h2 {
+  color: #dc3545;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
+.warning-content p {
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+body.dark-mode .warning-content h2 {
+  color: #ff6b6b;
+}
+
+/* Updated Welcome Screen Styles - Futuristic Theme */
+#welcome-screen {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
-  z-index: 100; /* Ensure it's on top */
-  padding: 20px;
+  background-color: var(--container-bg-color);
+  font-family: var(--body-font);
 }
-#start-screen h1 {
+
+#welcome-screen > * {
+  position: relative; /* Ensure content is above pseudo-elements */
+  z-index: 2;
+}
+
+#welcome-screen h1 {
+  font-family: var(--header-font);
+  font-size: 2.5rem;
+  color: var(--primary-color);
   margin-bottom: 30px;
-  font-size: 2.5em;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  padding-bottom: 15px;
 }
-#start-button {
-  padding: 15px 30px;
-  font-size: 1.2em;
+
+#welcome-screen h1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+}
+
+body.dark-mode #welcome-screen h1 {
+  color: var(--header-title-color);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode #welcome-screen h1::after {
+  background-color: var(--header-title-color);
+  opacity: 0.7;
+}
+
+.exam-selection {
+  width: 100%;
+  max-width: 800px;
+  background-color: rgba(0, 0, 0, 0.02);
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.exam-selection h3 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 15px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: 1px solid var(--button-border-color);
+  border-radius: 4px;
   cursor: pointer;
+  font-family: var(--body-font);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.action-button:hover {
+  background-color: var(--button-hover-bg-color);
+  transform: translateY(-1px);
+}
+
+.action-button .icon {
+  margin-right: 8px;
+  font-size: 1.1rem;
+}
+
+#start-exam-btn {
+  padding: 12px 30px;
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 15px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-#start-button:hover {
+
+#start-exam-btn:hover:not(:disabled) {
   background-color: var(--primary-color-darker);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#start-exam-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+/* Checkbox container improvements */
+.checkbox-container {
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.exam-checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.exam-checkbox-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.exam-checkbox-item label {
+  flex-grow: 1;
+  margin-left: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* Dark mode improvements for welcome screen */
+body.dark-mode .exam-selection {
+  background-color: rgba(255, 255, 255, 0.03);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .exam-selection h3 {
+  color: var(--header-title-color);
+}
+
+body.dark-mode .checkbox-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .exam-checkbox-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .exam-checkbox-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .action-button {
+  background-color: var(--button-bg-color);
+  border-color: var(--button-border-color);
+  color: var(--button-text-color);
+}
+
+body.dark-mode .action-button:hover {
+  background-color: var(--button-hover-bg-color);
+}
+
+body.dark-mode #start-exam-btn {
+  background-color: var(--primary-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode #start-exam-btn:hover:not(:disabled) {
+  background-color: var(--primary-color-darker);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Options List Improvements */
+#options-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-top: 25px;
+  margin-bottom: 0;
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.option {
+  margin-bottom: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: white;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  break-inside: avoid-column;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.option:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.option.selected {
+  background-color: rgba(0, 51, 102, 0.08);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(0, 51, 102, 0.2);
+}
+
+.option .option-text {
+  flex-grow: 1;
+  padding-left: 10px;
+}
+
+body.dark-mode .option {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-color);
+}
+
+body.dark-mode .option:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .option.selected {
+  background-color: rgba(106, 160, 220, 0.15);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(106, 160, 220, 0.3);
+}
+
+/* Calculator Modal Improvements */
+.calculator-content {
+  width: 100%;
+  max-width: 320px;
+  padding: 20px;
+}
+
+.calculator-content h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+#calculator-display {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.5rem;
+  text-align: right;
+  margin-bottom: 15px;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.calculator-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.calculator-grid button {
+  padding: 15px 0;
+  font-size: 1.2rem;
+  background-color: var(--button-bg-color);
+  border: 1px solid var(--button-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calculator-grid button:hover {
+  background-color: var(--button-hover-bg-color);
+  transform: translateY(-1px);
+}
+
+.calculator-grid button:active {
+  transform: translateY(1px);
+}
+
+.calculator-grid button[data-value="C"] {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.calculator-grid button[data-value="+"],
+.calculator-grid button[data-value="-"],
+.calculator-grid button[data-value="*"],
+.calculator-grid button[data-value="/"] {
+  background-color: #4d90fe;
+  color: white;
+}
+
+.calculator-grid button[data-value="="] {
+  background-color: #66bb6a;
+  color: white;
+  grid-column: span 4;
+}
+
+body.dark-mode .calculator-content h2 {
+  color: var(--header-title-color);
+}
+
+body.dark-mode #calculator-display {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .calculator-grid button {
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border-color: var(--button-border-color);
+}
+
+body.dark-mode .calculator-grid button:hover {
+  background-color: var(--button-hover-bg-color);
+}
+
+body.dark-mode .calculator-grid button[data-value="C"] {
+  background-color: #d32f2f;
+}
+
+body.dark-mode .calculator-grid button[data-value="+"],
+body.dark-mode .calculator-grid button[data-value="-"],
+body.dark-mode .calculator-grid button[data-value="*"],
+body.dark-mode .calculator-grid button[data-value="/"] {
+  background-color: #1976d2;
+}
+
+body.dark-mode .calculator-grid button[data-value="="] {
+  background-color: #388e3c;
+}
+
+/* Format Guide Modal fixes */
+#format-guide-modal {
+  z-index: 1100; /* Ensure it appears above other elements */
+}
+
+/* Ensure all tab content containers start hidden */
+#basic-tab,
+#advanced-tab,
+#examples-tab {
+  display: none; /* Hidden by default */
+}
+
+/* Make the active tab visible */
+#basic-tab.active,
+#advanced-tab.active,
+#examples-tab.active {
+  display: block !important; /* Force display when active */
+}
+
+/* Override modal display for format guide modal */
+.modal.format-guide-modal {
+  display: none; /* Hidden by default */
+}
+
+/* When active, use flex display */
+.modal.format-guide-modal:not(.hidden) {
+  display: flex !important; /* Force flex display when not hidden */
+}
+
+/* Format Guide Modal Styles */
+.format-guide-content {
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 25px;
+}
+
+.format-guide-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  gap: 5px;
+}
+
+.format-tab-btn {
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 1rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.format-tab-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.format-tab-btn.active {
+  border-bottom-color: var(--primary-color);
+  opacity: 1;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.format-tab-content {
+  display: none;
+}
+
+.format-tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.code-example {
+  background-color: #f5f5f5;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.5;
+  margin: 15px 0;
+}
+
+.format-guide-content h3 {
+  color: var(--primary-color);
+  font-size: 1.3rem;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.format-guide-content h4 {
+  font-size: 1.1rem;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.format-guide-content code {
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: "Courier New", monospace;
+  font-size: 0.95em;
+}
+
+body.dark-mode .format-guide-content {
+  color: var(--text-color);
+}
+
+body.dark-mode .format-tab-btn {
+  color: var(--text-color);
+}
+
+body.dark-mode .format-tab-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .format-tab-btn.active {
+  border-bottom-color: var(--primary-color);
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode .code-example {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-color: var(--border-color);
+}
+
+body.dark-mode .format-guide-content code {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .format-guide-content h3 {
+  color: var(--header-title-color);
+}
+
+/* Animation for tab transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Print-specific styles */
 @media print {
+  /* Control page settings */
+  @page {
+    margin: 0.5in;
+    size: auto;
+  }
+
+  /* Reset all elements to ensure proper printing */
+  * {
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   /* Hide everything by default */
   body * {
     visibility: hidden;
+    background-color: white !important; /* Force white background */
+    color: black !important; /* Force black text */
   }
 
   /* Show only the report container and its contents */
@@ -900,52 +1488,120 @@ body.dark-mode #close-review-modal:hover {
     visibility: visible;
   }
 
-  /* Position the report container at the top of the page */
+  /* Reset specific styles for the report content */
+  #report-content {
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Position the report container to fill the page */
   #report-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 10px; /* Add some padding */
-    border: none; /* Remove borders if any */
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    border: none !important;
+    background-color: white !important;
+    font-size: 12pt !important; /* Standardize font size for print */
   }
 
-  /* Hide the action buttons within the report container */
-  #report-actions,
+  /* Hide UI elements */
+  .report-buttons,
   #download-report-pdf,
-  #restart-button {
-    display: none !important; /* Ensure buttons are hidden */
+  #restart-button,
+  header,
+  footer,
+  .modal,
+  button,
+  #lab-values-panel,
+  .hidden {
+    display: none !important;
+    visibility: hidden !important;
   }
 
-  /* Try to prevent questions from breaking across pages */
-  .report-question {
-    page-break-inside: avoid;
-    margin-bottom: 15px; /* Add space between questions */
+  /* Control page breaks for report items */
+  .report-item:not(.report-summary) {
+    page-break-after: always;
+    break-after: page;
+    border: none !important;
+    margin-bottom: 0.5in !important;
+    padding-bottom: 0.25in !important;
+    clear: both !important;
+  }
+
+  /* Keep these elements together */
+  h2,
+  h3,
+  h4,
+  .report-question-text,
+  .report-explanation {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Ensure images don't overflow */
-  .question-image img {
-    max-width: 100%;
-    height: auto;
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Make sure status indicators print well */
+  .status-correct,
+  .status-incorrect,
+  .status-marked {
+    border: 1px solid #000 !important;
+    padding: 2px 5px !important;
+    margin-left: 5px !important;
+    display: inline-block !important;
+  }
+
+  .status-correct {
+    background-color: #e8f5e9 !important;
+    color: #1b5e20 !important;
+  }
+
+  .status-incorrect {
+    background-color: #ffebee !important;
+    color: #b71c1c !important;
+  }
+
+  .status-marked {
+    background-color: #fff8e1 !important;
+    color: #f57f17 !important;
+  }
+
+  /* Special styling for summary at the top */
+  .report-summary {
+    margin-bottom: 0.5in !important;
+    text-align: center !important;
+    border-bottom: 1px solid #000 !important;
+    padding-bottom: 0.25in !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  /* Better styling for marked questions in print */
+  .report-item.marked-question {
+    border-left: 4px solid #ffc107 !important;
+    padding-left: 12px !important;
+    background-color: #fffcf5 !important;
   }
 }
 
+/* Additional utility classes for text highlighting */
 .strikethrough-answer {
   text-decoration: line-through;
   color: grey;
-  cursor: pointer; /* Indicate it's clickable */
+  cursor: pointer;
 }
 
-/* Dark mode Highlighting style */
-body.dark-mode .highlight {
-  background-color: #ffff00; /* Brighter yellow maybe? */
-  color: #111; /* Ensure dark text */
-}
-
-/* --- Add Dark Mode Highlight Rules Below --- */
+/* Dark mode highlight style */
 body.dark-mode .highlighted-text {
-  background-color: #777; /* Muted gray for dark mode highlight (from original) */
-  color: #f0f0f0; /* Ensure text is readable (from original) */
+  background-color: #ffda15;
+  color: #101010;
 }
-/* --- End Dark Mode Highlight Rules --- */

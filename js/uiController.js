@@ -1,6 +1,6 @@
 // --- UI Controller ---
 // Manages UI elements like buttons, modals, dark mode, etc.
-import { openLabValuesPanel } from "./labValues.js"; // Import function to open lab panel
+import { openLabValuesPanel, closeLabValuesPanel } from "./labValues.js"; // Import functions to toggle lab panel
 
 // --- DOM Elements ---
 const prevButton = document.getElementById("prev-button");
@@ -9,7 +9,7 @@ const markCheckbox = document.getElementById("mark-question");
 // Review Modal
 const reviewModal = document.getElementById("review-modal");
 const reviewList = document.getElementById("review-list");
-const filterRadios = document.querySelectorAll('input[name="review-filter"]'); // Corrected selector
+const filterRadios = document.querySelectorAll('input[name="reviewFilter"]'); // Fix to match HTML's attribute
 const closeReviewButton = document.getElementById("close-review-modal");
 // Help Modal
 const helpModal = document.getElementById("help-modal");
@@ -158,65 +158,89 @@ let reviewListClickListener = null;
 // Modify openReviewModal to accept state arrays
 export function openReviewModal(questions, userAnswers, markedQuestions) {
   console.log("UI Controller: Opening Review Modal...");
-  if (!reviewModal) return;
-  // Pass state arrays to populateReviewList
-  populateReviewList(questions, userAnswers, markedQuestions);
+  if (!reviewModal) {
+    console.error("UI Controller: Review modal element not found!");
+    return;
+  }
+
+  // Make sure filter radios are accessible
+  if (!filterRadios || filterRadios.length === 0) {
+    console.error("UI Controller: Review filter radio buttons not found!");
+  } else {
+    console.log(
+      `UI Controller: Found ${filterRadios.length} filter radio buttons`
+    );
+
+    // Get currently selected filter (or default to 'all')
+    let currentFilter = "all";
+    for (const radio of filterRadios) {
+      if (radio.checked) {
+        currentFilter = radio.value;
+        break;
+      }
+    }
+
+    // Find and check the 'all' filter first if no filter is selected
+    if (currentFilter === "all" || !currentFilter) {
+      const allFilterRadio = Array.from(filterRadios).find(
+        (radio) => radio.value === "all"
+      );
+      if (allFilterRadio) {
+        allFilterRadio.checked = true;
+      }
+    }
+  }
+
+  // Pass state arrays to populateReviewList with the current filter
+  populateReviewList(
+    questions,
+    userAnswers,
+    markedQuestions,
+    getCurrentFilter()
+  );
   openModal(reviewModal);
 
-  // Keep track of the filter change listener to remove it later if needed
-  const filterChangeListener = (event) =>
+  // Define the filter change listener
+  const filterChangeListener = (event) => {
+    console.log(`UI Controller: Filter changed to ${event.target.value}`);
     populateReviewList(
       questions,
       userAnswers,
       markedQuestions,
       event.target.value
     );
+  };
 
   if (closeReviewButton) {
-    // Use an anonymous function for the close listener to avoid issues with `this`
-    // and ensure removal works correctly if we needed complex removal later.
-    // Using once:true is simpler here.
+    // Use an anonymous function for the close listener
     const closeHandler = () => {
       closeModal(reviewModal);
       // Clean up filter listeners when modal closes
       filterRadios.forEach((radio) => {
         radio.removeEventListener("change", filterChangeListener);
       });
-      // REVIEW: Do we still need reviewListClickListener cleanup?
-      // The listeners are now on the items, which are cleared by innerHTML.
-      // Let's remove this cleanup for now.
-      /*
-      if (reviewList && reviewListClickListener) {
-        console.log("UI Controller: Removing review list listener in closeHandler.");
-        reviewList.removeEventListener("click", reviewListClickListener);
-        reviewListClickListener = null; // Clear the reference
-      }
-      */
     };
     closeReviewButton.addEventListener("click", closeHandler, { once: true });
   }
 
-  // Add filter listeners
+  // Remove previous listeners and add new ones
   filterRadios.forEach((radio) => {
-    // Remove previous listener first before adding
     radio.removeEventListener("change", filterChangeListener);
     radio.addEventListener("change", filterChangeListener);
   });
+}
 
-  // REMOVE event delegation listener setup from here
-  /*
-  // Remove previous list listener if it exists before adding a new one
-  if (reviewList && reviewListClickListener) {
-    console.log("UI Controller: Removing existing review list listener before adding new one.");
-    reviewList.removeEventListener("click", reviewListClickListener);
+// Helper function to get the currently selected filter
+function getCurrentFilter() {
+  if (!filterRadios || filterRadios.length === 0) return "all";
+
+  for (const radio of filterRadios) {
+    if (radio.checked) {
+      return radio.value;
+    }
   }
-  // Store the new listener function reference
-  reviewListClickListener = handleReviewNavigation;
-  if (reviewList) {
-    console.log("UI Controller: Adding review list listener.");
-    reviewList.addEventListener("click", reviewListClickListener);
-  }
-  */
+
+  return "all"; // Default if none selected
 }
 
 // Modify populateReviewList signature and usage of state variables
@@ -227,7 +251,10 @@ function populateReviewList(
   filter = "all"
 ) {
   console.log(`UI Controller: Populating review list with filter: ${filter}`);
-  if (!reviewList) return;
+  if (!reviewList) {
+    console.error("UI Controller: Review list element not found!");
+    return;
+  }
 
   // Check if the passed arrays are valid
   if (
@@ -247,12 +274,24 @@ function populateReviewList(
   const numQuestions = questions.length;
   let filteredIndices = [];
 
+  // Add a summary counter message
+  const statsDiv = document.createElement("div");
+  statsDiv.className = "review-stats";
+  let answeredCount = 0;
+  let unansweredCount = 0;
+  let markedCount = 0;
+
+  // Count the stats first
   for (let i = 0; i < numQuestions; i++) {
-    let include = false;
-    // Use the passed parameters directly
     const isAnswered = userAnswers[i] !== null && userAnswers[i] !== undefined;
     const isMarked = markedQuestions[i] === true;
 
+    if (isAnswered) answeredCount++;
+    else unansweredCount++;
+    if (isMarked) markedCount++;
+
+    // Apply filtering
+    let include = false;
     switch (filter) {
       case "answered":
         include = isAnswered;
@@ -264,34 +303,62 @@ function populateReviewList(
         include = isMarked;
         break;
       default:
-        include = true;
+        include = true; // "all" filter
         break;
     }
+
     if (include) filteredIndices.push(i);
   }
 
+  // Add stats message at the top
+  statsDiv.innerHTML = `
+    <div>Total: <strong>${numQuestions}</strong> questions</div>
+    <div>Answered: <strong>${answeredCount}</strong> | Unanswered: <strong>${unansweredCount}</strong> | Marked: <strong>${markedCount}</strong></div>
+    <div>Showing <strong>${filteredIndices.length}</strong> questions with filter: <strong>${filter}</strong></div>
+  `;
+  reviewList.appendChild(statsDiv);
+
+  // Display message if no questions match the filter
   if (filteredIndices.length === 0) {
-    reviewList.innerHTML = "<li>No questions match this filter.</li>";
+    const emptyMessage = document.createElement("li");
+    emptyMessage.className = "no-matching-questions";
+    emptyMessage.textContent = `No questions match the "${filter}" filter.`;
+    reviewList.appendChild(emptyMessage);
     return;
   }
 
+  // Create and add items for matching questions
   filteredIndices.forEach((index) => {
     const listItem = document.createElement("li");
-    // Use the passed parameters directly
     const isAnswered =
       userAnswers[index] !== null && userAnswers[index] !== undefined;
     const isMarked = markedQuestions[index] === true;
-    let statusText = isAnswered ? "Answered" : "Unanswered";
-    if (isMarked) statusText += ", Marked";
 
-    // Use a SPAN for the clickable number
-    listItem.innerHTML = `<span class="review-item-link" data-question-index="${index}">Question ${
-      index + 1
-    }</span>: <span class="status status-${
-      isAnswered ? "answered" : "unanswered"
-    }${isMarked ? " status-marked" : ""}">${statusText}</span>`;
+    // Create status indicators
+    const statusList = [];
+    if (isAnswered)
+      statusList.push('<span class="status status-answered">Answered</span>');
+    else
+      statusList.push(
+        '<span class="status status-unanswered">Unanswered</span>'
+      );
+    if (isMarked)
+      statusList.push('<span class="status status-marked">Marked</span>');
 
-    // Add direct click listener to the list item (Original Approach)
+    const statusHTML = statusList.join(" ");
+
+    // Create the list item with enhanced styling
+    listItem.innerHTML = `
+      <div class="review-item-number">Question ${index + 1}</div>
+      <div class="review-item-status">${statusHTML}</div>
+    `;
+
+    // Make the whole item clickable
+    listItem.className = "review-list-item";
+    if (isMarked) listItem.classList.add("item-marked");
+    if (!isAnswered) listItem.classList.add("item-unanswered");
+
+    // Add click listener to navigate to the question
     listItem.addEventListener("click", () => {
       console.log(
         `UI Controller: Review item ${
@@ -500,12 +567,32 @@ function performCalculation() {
 // The actual panel logic is in labValues.js
 // This function is called by the button listener in renderer.js
 export function showLabValues() {
-  console.log("UI Controller: Requesting to show Lab Values panel...");
-  // Call the function imported from labValues.js
-  if (typeof openLabValuesPanel === "function") {
-    openLabValuesPanel();
+  console.log("UI Controller: Toggling Lab Values panel...");
+  // Get reference to the main wrapper to check if panel is active
+  const mainWrapper = document.querySelector(".main-wrapper");
+
+  // Check if the panel is already open
+  if (mainWrapper && mainWrapper.classList.contains("lab-panel-active")) {
+    console.log("UI Controller: Lab panel is already open, closing it...");
+    // Close the panel by directly calling the close function
+    if (typeof closeLabValuesPanel === "function") {
+      closeLabValuesPanel();
+    } else {
+      // Fallback if close function isn't available (or imported)
+      console.log(
+        "UI Controller: closeLabValuesPanel not found, removing class directly"
+      );
+      mainWrapper.classList.remove("lab-panel-active");
+    }
   } else {
-    console.error("openLabValuesPanel function not found or not imported!");
+    // Panel is not open, so open it
+    console.log("UI Controller: Opening Lab Values panel...");
+    // Call the function imported from labValues.js
+    if (typeof openLabValuesPanel === "function") {
+      openLabValuesPanel();
+    } else {
+      console.error("openLabValuesPanel function not found or not imported!");
+    }
   }
 }
 

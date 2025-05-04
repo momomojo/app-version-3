@@ -205,7 +205,13 @@ export function endExam() {
 
   // Generate and display the report
   if (reportContentElement) {
-    generateReport(reportContentElement, questions, userAnswers, scoreData);
+    generateReport(
+      reportContentElement,
+      questions,
+      userAnswers,
+      scoreData,
+      markedQuestions
+    );
     showView("report"); // Switch UI to the report view
   } else {
     console.error("Cannot display report: report content element not found.");
@@ -242,75 +248,19 @@ function restartExam() {
 }
 
 async function downloadReportAsPDF() {
-  console.log("Renderer: Preparing PDF download...");
-  const reportContent = document.getElementById("report-content");
-  const reportButtons = document.querySelector(".report-buttons"); // Buttons container
-  if (!reportContent) {
-    console.error("Cannot download PDF: Report content element not found.");
-    alert("Error: Could not find report content to download.");
-    return;
-  }
-  if (!window.html2canvas || !window.jspdf) {
-    console.error(
-      "Cannot download PDF: html2canvas or jspdf library not found."
-    );
-    alert("Error: PDF generation library not loaded.");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf; // Destructure jsPDF from the global object
-
-  // Temporarily hide buttons during capture
-  if (reportButtons) reportButtons.style.display = "none";
-
+  console.log("Renderer: Generating PDF via Electron API...");
   try {
-    const canvas = await html2canvas(reportContent, {
-      scale: 2, // Increase scale for better quality
-      useCORS: true, // If report includes external images (unlikely here)
-      logging: true, // Enable logging for debugging
-    });
-
-    // Restore buttons visibility after capture
-    if (reportButtons) reportButtons.style.display = "block";
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "p", // portrait
-      unit: "mm", // millimeters
-      format: "a4", // A4 size
-    });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgWidth = pdfWidth - 20; // pdf width with some margin
-    const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-
-    let heightLeft = imgHeight;
-    let position = 10; // Initial top margin
-
-    // Add first page
-    pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight - 20; // Subtract first page height (with margin)
-
-    // Add subsequent pages if needed
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight + 10; // Adjust position for next page
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight - 20;
+    const result = await window.electronAPI.printToPDF();
+    if (result && result.success) {
+      console.log(`Renderer: PDF saved to ${result.filePath}`);
+      alert(`PDF successfully saved to:\n${result.filePath}`);
+    } else {
+      console.warn("Renderer: PDF generation was cancelled or failed.");
+      alert("PDF generation was cancelled or failed.");
     }
-
-    // Generate a filename based on the exam
-    const safeFilename =
-      (examFilename || "exam_report").replace(/[^a-z0-9_-]/gi, "_") + ".pdf";
-    pdf.save(safeFilename);
-    console.log(`Renderer: PDF download initiated as ${safeFilename}`);
   } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("An error occurred while generating the PDF report.");
-    // Restore buttons visibility in case of error
-    if (reportButtons) reportButtons.style.display = "block";
+    console.error("Renderer: Error during PDF generation:", error);
+    alert(`Error generating PDF: ${error.message}`);
   }
 }
 
@@ -351,7 +301,11 @@ export async function initializeExam(selectedFilename) {
 
     // Start the timer (using default or potentially from exam data)
     // Example: const examDuration = questions[0]?.examDuration || 150 * 90; // Get from data or use default
-    const examDuration = 150 * 90; // Stick to default for now
+    const secondsPerQuestion = 90; // 90 seconds per question
+    const examDuration = questions.length * secondsPerQuestion; // Use actual question count
+    console.log(
+      `Renderer: Starting timer with ${questions.length} questions (${examDuration} seconds)`
+    );
     startTimer(examDuration);
 
     // Show the main exam view (already done by welcomeScreen? Redundant?)

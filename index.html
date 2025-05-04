@@ -5,19 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Clinical Neurology Self-Assessment</title>
     <link rel="stylesheet" href="css/style.css" />
+    <!-- PDF generation libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </head>
   <body>
     <div id="welcome-screen">
-      <h1>Welcome to the Exam</h1>
-      <label for="exam-select">Choose an exam:</label>
-      <select name="exams" id="exam-select">
-        <option value="">--Please choose an exam--</option>
-        <!-- Options will be populated dynamically -->
-      </select>
-      <button id="start-exam-btn" disabled>Start Exam</button>
-      <p id="loading-message"></p>
+      <h1>Welcome to Mohib's Torture Device</h1>
+      <div class="exam-selection">
+        <h3>Choose exam file(s):</h3>
+        <div id="exam-checkboxes" class="checkbox-container">
+          <!-- Checkboxes will be added here dynamically -->
+        </div>
+        <div class="file-actions">
+          <button id="upload-files-btn" class="action-button">
+            <span class="icon">↑</span> Upload JSON Files
+          </button>
+          <button id="select-directory-btn" class="action-button">
+            <span class="icon">📁</span> Select Directory
+          </button>
+          <button id="format-guide-btn" class="action-button">
+            <span class="icon">📝</span> Format Guide
+          </button>
+        </div>
+        <p>
+          <small
+            >Select one or more exam files to combine them into a single
+            exam</small
+          >
+        </p>
+      </div>
+      <div class="exam-actions">
+        <button id="start-exam-btn" disabled>Start Exam</button>
+        <p id="exam-summary"></p>
+        <p id="loading-message"></p>
+      </div>
       <!-- To show loading/error messages -->
     </div>
+
+    <!-- Warning Modal -->
+    <div id="warning-modal" class="modal" style="z-index: 1100">
+      <div class="modal-content warning-content">
+        <span class="close-button" id="close-warning-modal">&times;</span>
+        <h2>WARNING</h2>
+        <p>
+          If you're not Nabeel, you don't have permission to use this (I will
+          find you)
+        </p>
+      </div>
+    </div>
+
     <div id="app-container" style="display: none">
       <!-- Initially hidden -->
       <header class="hidden">
@@ -59,7 +96,6 @@
       <footer class="hidden">
         <button id="prev-button" disabled>Previous</button>
         <button id="next-button" disabled>Next</button>
-        <span class="footer-link">https://t.me/USMLENBME2CK</span>
         <button id="lab-values-button" disabled>Lab Values</button>
         <button id="calculator-button" disabled>Calculator</button>
         <button id="review-button" disabled>Review</button>
@@ -133,17 +169,187 @@
       <div class="modal-content calculator-content">
         <span class="close-button" id="close-calculator-modal">&times;</span>
         <h2>Calculator</h2>
-        <input type="text" id="calculator-display" disabled />
+        <input type="text" id="calculator-display" disabled value="0" />
         <div id="calculator-buttons" class="calculator-grid">
-          <button data-value="7">7</button> <button data-value="8">8</button>
-          <button data-value="9">9</button> <button data-value="/">/</button>
-          <button data-value="4">4</button> <button data-value="5">5</button>
-          <button data-value="6">6</button> <button data-value="*">*</button>
-          <button data-value="1">1</button> <button data-value="2">2</button>
-          <button data-value="3">3</button> <button data-value="-">-</button>
-          <button data-value="0">0</button> <button data-value=".">.</button>
-          <button data-value="C">C</button> <button data-value="+">+</button>
+          <button data-value="7">7</button>
+          <button data-value="8">8</button>
+          <button data-value="9">9</button>
+          <button data-value="/">&divide;</button>
+
+          <button data-value="4">4</button>
+          <button data-value="5">5</button>
+          <button data-value="6">6</button>
+          <button data-value="*">&times;</button>
+
+          <button data-value="1">1</button>
+          <button data-value="2">2</button>
+          <button data-value="3">3</button>
+          <button data-value="-">&minus;</button>
+
+          <button data-value="0">0</button>
+          <button data-value=".">.</button>
+          <button data-value="C">C</button>
+          <button data-value="+">+</button>
+
           <button data-value="=" class="equals">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Format Guide Modal -->
+    <div id="format-guide-modal" class="modal format-guide-modal hidden">
+      <div class="modal-content format-guide-content">
+        <span class="close-button" id="close-format-guide-modal">&times;</span>
+        <h2>JSON Format Guide</h2>
+        <div class="format-guide-tabs">
+          <button class="format-tab-btn active" data-tab="basic">
+            Basic Format
+          </button>
+          <button class="format-tab-btn" data-tab="advanced">
+            Advanced Features
+          </button>
+          <button class="format-tab-btn" data-tab="examples">Examples</button>
+        </div>
+        <div class="format-tab-content active" id="basic-tab">
+          <h3>Basic JSON Format</h3>
+          <p>
+            Each exam file should be a JSON array of question objects. Each
+            question object requires <code>text</code>, <code>options</code>,
+            and <code>correctAnswer</code> fields.
+          </p>
+          <pre class="code-example">
+[
+  {
+    "text": "Question text goes here...",
+    "options": {
+      "A": "First option text",
+      "B": "Second option text",
+      "C": "Third option text",
+      "D": "Fourth option text", // More options can be added
+    },
+    "correctAnswer": "C", // The letter matching the key in options
+    "explanation": "Optional explanation text for the correct answer...",
+    "image": null // Optional path to an image file
+  },
+  // ... more question objects
+]</pre
+          >
+          <p><strong>Required Fields:</strong></p>
+          <ul>
+            <li><code>text</code> (String): The question stem.</li>
+            <li>
+              <code>options</code> (Object): Keys are option letters (A, B,
+              C...), values are the option texts (String).
+            </li>
+            <li>
+              <code>correctAnswer</code> (String): The letter key corresponding
+              to the correct option in the <code>options</code> object.
+            </li>
+          </ul>
+          <p><strong>Optional Fields:</strong></p>
+          <ul>
+            <li>
+              <code>explanation</code> (String): A simple text explanation for
+              the answer. (Note: Complex explanation objects are not supported).
+            </li>
+            <li>
+              <code>image</code> (String or null): Path to an image file,
+              <strong>relative to the location of the JSON file</strong> (e.g.,
+              <code>"img/diagram.png"</code>), or <code>null</code> if no image.
+            </li>
+          </ul>
+        </div>
+        <div class="format-tab-content" id="advanced-tab">
+          <h3>Advanced Features</h3>
+          <p>You can enhance your questions with these additional features:</p>
+          <h4>Adding Images</h4>
+          <p>
+            Include the <code>image</code> field with a path
+            <strong>relative to the JSON file</strong>. Create a subdirectory
+            (e.g., <code>img</code>) next to your JSON file to store the images.
+          </p>
+          <pre class="code-example">
+{
+  "text": "What pathology is shown in this brain MRI?",
+  "image": "img/brain_mri.jpg", // Image path relative to JSON file
+  "options": {
+    "A": "Meningioma",
+    "B": "Glioblastoma",
+    "C": "Multiple Sclerosis",
+    "D": "Stroke"
+  },
+  "correctAnswer": "B",
+  "explanation": "The image shows characteristic features of glioblastoma..."
+}</pre
+          >
+          <h4>Alternative Options Format (Array)</h4>
+          <p>
+            Instead of an object, <code>options</code> can be an array of
+            strings. If you use an array, <code>correctAnswer</code> must be the
+            <strong>0-based numeric index</strong> of the correct option in the
+            array.
+          </p>
+          <pre class="code-example">
+{
+  "text": "Which antibiotic is appropriate for this case?",
+  "options": [
+    "Amoxicillin",    // Index 0
+    "Ciprofloxacin",  // Index 1
+    "Vancomycin",     // Index 2
+    "Metronidazole",  // Index 3
+    "Azithromycin"    // Index 4
+  ],
+  "correctAnswer": 2, // Corresponds to "Vancomycin"
+  "explanation": "Vancomycin is appropriate because..."
+}</pre
+          >
+        </div>
+        <div class="format-tab-content" id="examples-tab">
+          <h3>Complete Example</h3>
+          <pre class="code-example">
+[
+  {
+    "text": "A 45-year-old man presents with fever... Which of the following is the most likely diagnosis?",
+    "options": {
+      "A": "Herpes simplex encephalitis",
+      "B": "Lyme disease",
+      "C": "Neurosarcoidosis",
+      "D": "Neurosyphilis", 
+      "E": "Tuberculous meningitis"
+    },
+    "correctAnswer": "B",
+    "explanation": "The clinical presentation and CSF findings are consistent with Lyme disease..."
+  },
+  {
+    "text": "An 18-year-old female presents with a first seizure. MRI shows the lesion... What is the diagnosis?",
+    "image": "img/cavernoma.jpg", // Image path relative to this JSON file
+    "options": [
+      "Astrocytoma",             // Index 0
+      "Cavernous hemangioma",    // Index 1
+      "Multiple sclerosis",      // Index 2
+      "Arteriovenous malformation" // Index 3
+    ],
+    "correctAnswer": 1, // Index 1 is "Cavernous hemangioma"
+    "explanation": "The image shows a cavernous hemangioma (cavernoma)..."
+  }
+]</pre
+          >
+          <h3>File Structure Tips</h3>
+          <ul>
+            <li>Save your file with a <code>.json</code> extension.</li>
+            <li>
+              Ensure the JSON is valid (use an online validator if unsure).
+            </li>
+            <li>
+              Place images in a subdirectory (e.g., <code>img/</code>) located
+              in the same directory as your JSON file. Reference them using
+              relative paths (e.g., <code>"img/your_image.png"</code>).
+            </li>
+            <li>
+              You can select multiple JSON files or a directory containing
+              multiple JSON files in the welcome screen to combine questions.
+            </li>
+          </ul>
         </div>
       </div>
     </div>

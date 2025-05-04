@@ -301,7 +301,8 @@ export function openLabValuesPanel() {
   }
 }
 
-function closeLabValuesPanel() {
+// Also export this function so it can be called from uiController
+export function closeLabValuesPanel() {
   console.log("LabValues: Closing Lab Values Panel...");
   // Ensure mainWrapper is selected
   const mainWrapper = document.querySelector(".main-wrapper");
