@@ -227,14 +227,22 @@ footer {
   border-top: 1px solid var(--border-color);
   padding: 12px 20px;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Key change: pushes groups apart */
   align-items: center;
   font-family: var(--body-font);
   font-size: 0.9rem;
   flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
   flex-shrink: 0; /* NEW: Prevent the footer from shrinking */
   position: relative; /* NEW: Enable z-index to work */
-  gap: 8px;
+  gap: 0; /* Remove the gap between the wrappers themselves */
+}
+
+/* Style the new wrapper divs */
+.footer-nav,
+.footer-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Controls spacing *within* each group */
 }
 
 footer button {
