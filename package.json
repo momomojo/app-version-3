@@ -1,16 +1,53 @@
 {
   "name": "app-version-3",
   "version": "1.0.0",
-  "description": "",
+  "description": "Clinical Neurology Self-Assessment App",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["exam", "assessment", "neurology"],
+  "author": "Your Name or Org",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^28.3.3"
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1" 
+  },
+  "build": {
+    "appId": "com.example.clinicalneurologyassessment",
+    "productName": "Clinical Neurology Self-Assessment",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.bin",
+      "!node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/*.{o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}",
+      "!.vscode",
+      "!dist",
+      "!*.pdf",
+      "!*report*.pdf"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico" 
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.education",
+      "icon": "icon.icns" 
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
